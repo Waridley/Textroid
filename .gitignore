@@ -1,0 +1,14 @@
+# Project exclude paths
+/.gradle/
+/api/backend/build/
+/api/build/
+/api/frontend/build/
+/build/
+/credentials/build/
+/game/build/
+/mongo/build/
+/mongo/build/classes/java/main/
+/server/build/
+/ttv/build/
+/ttv/chat_client/build/
+/ttv/monitor/build/
