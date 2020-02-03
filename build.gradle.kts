@@ -26,10 +26,12 @@ allprojects {
 }
 
 dependencies {
+	implementation(project("credentials"))
 	implementation(project("game"))
 	implementation(project("server"))
 	implementation(project("mongo"))
 	implementation(project("ttv:chat_client"))
+	implementation(project("ttv:monitor"))
 	
 	implementation("com.fasterxml.jackson.core", "jackson-databind", "2.9.7")
 }

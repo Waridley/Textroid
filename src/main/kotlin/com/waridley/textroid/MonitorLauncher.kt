@@ -1,20 +1,17 @@
-package com.waridley.textroid.ttv.monitor
+package com.waridley.textroid
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.prompt
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
-import com.github.philippheuer.events4j.api.domain.IEvent
-import com.github.philippheuer.events4j.api.service.IServiceMediator
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.mongodb.ConnectionString
 import com.waridley.textroid.credentials.AuthenticationHelper
 import com.waridley.textroid.credentials.DesktopAuthController
 import com.waridley.textroid.mongo.credentials.MongoCredentialMap
+import com.waridley.textroid.ttv.monitor.ChannelMonitor
 import org.litote.kmongo.KMongo
-import java.io.Closeable
-import java.util.*
 
 class MonitorLauncher: CliktCommand() {
 	private val channelName by option("-c", "--channel", help = "The name of the channel to join.").prompt("Channel name:")
@@ -37,37 +34,8 @@ class MonitorLauncher: CliktCommand() {
 		credentialManager.registerIdentityProvider(idProvider)
 		
 		val authHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
-		ChannelMonitor(authHelper, channelName) {
-			waitFor(CloseEvent::class)
-		}
+		ChannelMonitor(authHelper)
+
 	}
 }
-
-class CloseEvent: IEvent {
-	override fun getFiredAt(): Calendar {
-		TODO("auto-generated function body")
-	}
-	
-	override fun setServiceMediator(serviceMediator: IServiceMediator?) {
-		TODO("auto-generated function body")
-	}
-	
-	override fun setEventId(id: String?) {
-		TODO("auto-generated function body")
-	}
-	
-	override fun getServiceMediator(): IServiceMediator {
-		TODO("auto-generated function body")
-	}
-	
-	override fun getEventId(): String {
-		TODO("auto-generated function body")
-	}
-	
-	override fun setFiredAt(calendar: Calendar?) {
-		TODO("auto-generated function body")
-	}
-	
-}
-
 fun main(args: Array<String>) = MonitorLauncher().main(args)
