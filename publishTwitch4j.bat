@@ -1,1 +1,0 @@
-cd twitch4j && gradlew.bat publishToMavenLocal

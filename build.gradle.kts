@@ -48,13 +48,13 @@ tasks {
 	}
 }
 
-task("publishTwitch4j", Exec::class) {
+task("publishDeps", Exec::class) {
 	environment("CI_COMMIT_REF_NAME", "64.$version")
 	if(Os.isFamily(Os.FAMILY_WINDOWS)) {
 		executable("cmd.exe")
-		args("publishTwitch4j.bat")
+		args("publishDeps.bat")
 	} else if(Os.isFamily(Os.FAMILY_UNIX)) {
 		executable("bash")
-		args("publishTwitch4j.sh")
+		args("publishDeps.sh")
 	}
 }

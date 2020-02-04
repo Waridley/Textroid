@@ -1,3 +1,3 @@
 dependencies {
-	api("com.github.philippheuer.credentialmanager", "credentialmanager", "0.1.0")
+	api("com.github.philippheuer.credentialmanager", "credentialmanager", "64.$version")
 }

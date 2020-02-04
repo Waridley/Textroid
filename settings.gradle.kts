@@ -12,9 +12,3 @@ include(
 	"ttv:chat_client",
 	"ttv:monitor"
 )
-
-includeBuild("credential-manager") {
-	dependencySubstitution {
-		substitute(module("com.github.philippheuer.credentialmanager:credential-manager")).with(project(":"))
-	}
-}
