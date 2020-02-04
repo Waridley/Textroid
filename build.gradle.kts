@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
 	kotlin("jvm") version "1.3.61"
 }
@@ -46,15 +48,13 @@ tasks {
 	}
 }
 
-
-task("publishTwitch4jToLinux", Exec::class) {
+task("publishTwitch4j", Exec::class) {
 	environment("CI_COMMIT_REF_NAME", "64.$version")
-	executable("bash")
-	args("publishTwitch4j.sh")
-}
-
-task("publishTwitch4jToWindows", Exec::class) {
-	environment("CI_COMMIT_REF_NAME", "64.$version")
-	executable("cmd.exe")
-	args("publishTwitch4j.bat")
+	if(Os.isFamily(Os.FAMILY_WINDOWS)) {
+		executable("cmd.exe")
+		args("publishTwitch4j.bat")
+	} else if(Os.isFamily(Os.FAMILY_UNIX)) {
+		executable("bash")
+		args("publishTwitch4j.sh")
+	}
 }
