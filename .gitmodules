@@ -1,0 +1,7 @@
+[submodule "twitch4j"]
+	path = twitch4j
+	url = https://github.com/Waridley/twitch4j.git
+	branch = working
+[submodule "credential-manager"]
+	path = credential-manager
+	url = https://github.com/Waridley/credential-manager.git

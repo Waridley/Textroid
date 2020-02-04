@@ -37,10 +37,24 @@ dependencies {
 }
 
 tasks {
+
 	compileKotlin {
 		kotlinOptions.jvmTarget = "1.8"
 	}
 	compileTestKotlin {
 		kotlinOptions.jvmTarget = "1.8"
 	}
+}
+
+
+task("publishTwitch4jToLinux", Exec::class) {
+	environment("CI_COMMIT_REF_NAME", "64.$version")
+	executable("bash")
+	args("publishTwitch4j.sh")
+}
+
+task("publishTwitch4jToWindows", Exec::class) {
+	environment("CI_COMMIT_REF_NAME", "64.$version")
+	executable("cmd.exe")
+	args("publishTwitch4j.bat")
 }
