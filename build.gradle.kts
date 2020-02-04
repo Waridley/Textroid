@@ -2,10 +2,10 @@ plugins {
 	kotlin("jvm") version "1.3.61"
 }
 
-group = "com.waridley"
-version = "0.1"
-
 allprojects {
+	group = "com.waridley"
+	version = "0.1"
+
 	apply(plugin = "java")
 	apply(plugin = "kotlin")
 	
