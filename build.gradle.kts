@@ -73,12 +73,13 @@ dependencies {
 }
 
 tasks {
-	compileKotlin {
+	init {
 		dependsOn("setEnv")
+	}
+	compileKotlin {
 		kotlinOptions.jvmTarget = "1.8"
 	}
 	compileTestKotlin {
-		dependsOn("setEnv")
 		kotlinOptions.jvmTarget = "1.8"
 	}
 }
