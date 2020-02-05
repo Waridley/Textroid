@@ -1,3 +1,3 @@
 dependencies {
-    implementation(project(":game"))
+    implementation(project(":engine"))
 }
