@@ -19,12 +19,12 @@ import java.util.*
 
 class MongoCredentialMap<T>(db: MongoDatabase, collectionName: String = "credentials") : CredentialMap<T>() {
 	
-	private val collection = db
-		.getOrCreateCollection<Document>(collectionName)
-		.withCodecRegistry(fromRegistries(
-			MongoClient.getDefaultCodecRegistry(),
-			CodecRegistries.fromProviders(CredentialCodecProvider())
-		)).withKMongo()
+	private val collection = db.getOrCreateCollection<Document>(collectionName)
+			.withCodecRegistry(fromRegistries(
+				MongoClient.getDefaultCodecRegistry(),
+				CodecRegistries.fromProviders(CredentialCodecProvider())
+			)
+		).withKMongo()
 	
 	override val entries: MutableSet<MutableMap.MutableEntry<T, Credential?>>
 		get() =  collection.find(Entry<T>::value.exists()).toMutableSet().toMutableSet().map {
