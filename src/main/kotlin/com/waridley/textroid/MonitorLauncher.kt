@@ -14,11 +14,11 @@ import com.waridley.textroid.ttv.monitor.ChannelMonitor
 import org.litote.kmongo.KMongo
 
 class MonitorLauncher: CliktCommand() {
-	private val channelName by option("-c", "--channel", help = "The name of the channel to join.").prompt("Channel name:")
-	private val clientId by option("-i", "--client-id", help = "Your application's client ID").prompt("Client ID:")
-	private val clientSecret by option("-s", "--client-secret", help = "Your application's client secret.").prompt("Client secret:", hideInput = true)
+	private val channelName by option("-c", "--channel", help = "The name of the channel to join.").prompt("Channel name")
+	private val clientId by option("-i", "--client-id", help = "Your application's client ID").prompt("Client ID")
+	private val clientSecret by option("-s", "--client-secret", help = "Your application's client secret.").prompt("Client secret", hideInput = true)
 	private val redirectUrl by option("-r", "--redirect-url", help = "The redirect URL for OAuth2 code flow. Must match the URL registered with your client ID.").default("http://localhost")
-	private val dbConnStr by option("-d", "--connection-string", help = "Your MongoDB connection string").prompt("MongoDB connection string:")
+	private val dbConnStr by option("-d", "--connection-string", help = "Your MongoDB connection string").prompt("MongoDB connection string")
 	private val redirectPort = 4242
 	
 	override fun run() {
