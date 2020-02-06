@@ -13,3 +13,5 @@
 /ttv/chat_client/build/
 /ttv/monitor/build/
 /.idea
+build/
+*/build/
