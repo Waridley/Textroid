@@ -13,15 +13,11 @@ fun main(args: Array<String>) {
 }
 
 
-
-
-
-
-
-@ExperimentalUnsignedTypes @Suppress("UNUSED")
+@ExperimentalUnsignedTypes
+@Suppress("UNUSED")
 fun testPlayer(connStr: String) {
 	val db = KMongo.createClient(
-		connectionString = ConnectionString(connStr)
+			connectionString = ConnectionString(connStr)
 	).getDatabase("chatgame")
 	
 	val players = MongoPlayerStorage(db, "test")
@@ -48,7 +44,7 @@ fun testPlayer(connStr: String) {
 	println(x)
 	
 	fun testUsernames(vararg values: String) {
-		for(v in values) {
+		for (v in values) {
 			try {
 				players.new(v)
 			} catch (e: Exception) {
@@ -58,11 +54,11 @@ fun testPlayer(connStr: String) {
 	}
 	
 	testUsernames(
-		"",
-		"               ",
-		"\t\t\t\t\t",
-		Long.MAX_VALUE.toString(2),
-		"testuser4"
+			"",
+			"               ",
+			"\t\t\t\t\t",
+			Long.MAX_VALUE.toString(2),
+			"testuser4"
 	)
 }
 
@@ -74,6 +70,7 @@ fun printString(s: String?) {
 }
 
 class Launcher
+
 var Player.answer: Int by Player.Attrs(Launcher::class)
 var Player.brain: String by Player.Attrs.Unique(Launcher::class)
 

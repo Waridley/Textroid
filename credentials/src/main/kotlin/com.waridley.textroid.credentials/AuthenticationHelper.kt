@@ -13,10 +13,10 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 class AuthenticationHelper(
-			val identityProvider: OAuth2IdentityProvider,
-			private val redirectUrl: String? = null,
-			redirectPort: Int? = null
-			) {
+		val identityProvider: OAuth2IdentityProvider,
+		private val redirectUrl: String? = null,
+		redirectPort: Int? = null
+) {
 
 	private val credentialManager = identityProvider.credentialManager
 	@Suppress("UNCHECKED_CAST")
@@ -24,7 +24,7 @@ class AuthenticationHelper(
 	private val authController = credentialManager.authenticationController as DesktopAuthController
 
 	private val redirectUri by lazy { redirectUrl?.let { URI(redirectUrl) } ?: URI("http://localhost") }
-	private val port by lazy { redirectPort?: redirectUri.port }
+	private val port by lazy { redirectPort ?: redirectUri.port }
 
 	private val server: HttpServer by lazy {
 		val s = HttpServer.create(InetSocketAddress(this.port), 0)
@@ -33,46 +33,47 @@ class AuthenticationHelper(
 	}
 
 	fun retrieveCredential(
-				credName: String,
-				scopes: List<Any> = listOf(),
-				infoPageHandler: (e: HttpExchange) -> Unit = ::handleInfoPage,
-				onRetrieved: (c: OAuth2Credential) -> Unit) {
+			credName: String,
+			scopes: List<Any> = listOf(),
+			infoPageHandler: (e: HttpExchange) -> Unit = ::handleInfoPage,
+			onRetrieved: (c: OAuth2Credential) -> Unit) {
 
 		credentialStorage[credName]
-			?.let { it as OAuth2Credential }
-			?.let { oauth2cred ->
-				log.info("Found credential named $credName.")
-				identityProvider
-					.refreshCredential(oauth2cred).orNull()?.let { refreshedCred ->
-						log.info("Successfully refreshed credential")
-						val cred = identityProvider.getAdditionalCredentialInformation(refreshedCred).orNull()?: refreshedCred
-						credentialStorage[credName] = cred
-						cred
-					}?: run {
-					log.error("Failed to refresh credential. If this one doesn't work, delete it from storage to generate a new one.")
-					oauth2cred
-				}
-			}?.also { onRetrieved(it) }
-			?: run {
-				log.info("No saved credential named $credName found. Starting OAuth2 Authorization Code Flow.")
-				try {
-					retrieveNewCredential(credName, onRetrieved, infoPageHandler, scopes)
-				} catch (e: IOException) {
-					e.printStackTrace()
-				}
+				?.let { it as OAuth2Credential }
+				?.let { oauth2cred ->
+					log.info("Found credential named $credName.")
+					identityProvider
+							.refreshCredential(oauth2cred).orNull()?.let { refreshedCred ->
+								log.info("Successfully refreshed credential")
+								val cred = identityProvider.getAdditionalCredentialInformation(refreshedCred).orNull()
+								           ?: refreshedCred
+								credentialStorage[credName] = cred
+								cred
+							} ?: run {
+						log.error("Failed to refresh credential. If this one doesn't work, delete it from storage to generate a new one.")
+						oauth2cred
+					}
+				}?.also { onRetrieved(it) }
+		?: run {
+			log.info("No saved credential named $credName found. Starting OAuth2 Authorization Code Flow.")
+			try {
+				retrieveNewCredential(credName, onRetrieved, infoPageHandler, scopes)
+			} catch (e: IOException) {
+				e.printStackTrace()
 			}
+		}
 	}
 
 	private fun retrieveNewCredential(
-				credName: String,
-				onRetrieved: (c: OAuth2Credential) -> Any?,
-				infoPageHandler: (e: HttpExchange) -> Any? = this::handleInfoPage,
-				scopes: List<Any> = listOf()) {
+			credName: String,
+			onRetrieved: (c: OAuth2Credential) -> Any?,
+			infoPageHandler: (e: HttpExchange) -> Any? = this::handleInfoPage,
+			scopes: List<Any> = listOf()) {
 		
 		server.createContext(redirectUri.path.let {
 			when {
 				it.isBlank() -> "/"
-				else -> it
+				else         -> it
 			}
 		}) { onReceivedCode(credName, it, onRetrieved) }
 		authController.infoUrl?.let { infoUrl ->
@@ -80,9 +81,9 @@ class AuthenticationHelper(
 			server.createContext(path) { infoPageHandler(it) }
 		}
 		authController.startOAuth2AuthorizationCodeGrantType(
-			identityProvider,
-			redirectUrl,
-			scopes
+				identityProvider,
+				redirectUrl,
+				scopes
 		)
 	}
 
@@ -94,11 +95,11 @@ class AuthenticationHelper(
 		var cred: OAuth2Credential? = null
 		var code: String? = null
 		for (s in splitQuery) {
-			if(s.startsWith("code=")) {
+			if (s.startsWith("code=")) {
 				try {
 					code = s.substring(5)
 					cred = identityProvider.getCredentialByCode(code)
-					cred = identityProvider.getAdditionalCredentialInformation(cred).orElse(null)?: cred
+					cred = identityProvider.getAdditionalCredentialInformation(cred).orElse(null) ?: cred
 //					credentialManager.addCredential("twitch", cred)
 					credentialStorage[credName] = cred
 					server.stop(0)
@@ -112,7 +113,7 @@ class AuthenticationHelper(
 
 		try {
 			val codeBodyPair: Pair<Int, String> =
-				cred?.let { 200 to "<h1>Success!</h1>Received authorization code and retrieved OAuth2 credential." }
+					cred?.let { 200 to "<h1>Success!</h1>Received authorization code and retrieved OAuth2 credential." }
 					?: code?.let { 500 to "<h1>Oops!</h1>Received code, but couldn't retrieve credential." }
 					?: 500 to "<h1>Oops!</h1>Did not receive a code in the response."
 
@@ -152,7 +153,7 @@ class AuthenticationHelper(
 		"""
 
 
-		val responseCode = authUrl?.let { 200 }?: 500
+		val responseCode = authUrl?.let { 200 } ?: 500
 		exchange.sendResponseHeaders(responseCode, response.length.toLong())
 		exchange.responseBody.write(response.toByteArray())
 		exchange.responseBody.close()

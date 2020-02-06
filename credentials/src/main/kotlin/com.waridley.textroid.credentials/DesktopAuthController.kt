@@ -37,27 +37,29 @@ import java.nio.charset.StandardCharsets
  * If Desktop is not supported, it will print an error telling the user they may be able to paste the URL in a browser to continue authentication.
  */
 open class DesktopAuthController(val infoUrl: String? = null) : AuthenticationController() {
-	override fun startOAuth2AuthorizationCodeGrantType(provider: OAuth2IdentityProvider, redirectUrl: String?, scopes: List<Any>?) {
+	override fun startOAuth2AuthorizationCodeGrantType(provider: OAuth2IdentityProvider,
+	                                                   redirectUrl: String?,
+	                                                   scopes: List<Any>?) {
 
 		val authURL = redirectUrl?.let {
-			provider.getAuthenticationUrl(it, scopes?: listOf(), null)
-		}?: provider.getAuthenticationUrl(scopes?: listOf(), null)
+			provider.getAuthenticationUrl(it, scopes ?: listOf(), null)
+		} ?: provider.getAuthenticationUrl(scopes ?: listOf(), null)
 		try {
 			val browseURI = infoUrl?.let {
-				val infoUri =  URI(infoUrl)
+				val infoUri = URI(infoUrl)
 				//get parts of infoURI in order to add authURL to query
 				val scheme = infoUri.scheme
 				val userInfo = infoUri.userInfo
 				val host = infoUri.host
 				val port = infoUri.port
 				val path = infoUri.path
-				val query = (infoUri.query?.let { "$it&" }?: "").let {
-						"${it}authurl=${URLEncoder.encode(authURL, StandardCharsets.UTF_8.toString())}"
-					}
+				val query = (infoUri.query?.let { "$it&" } ?: "").let {
+					"${it}authurl=${URLEncoder.encode(authURL, StandardCharsets.UTF_8.toString())}"
+				}
 				val fragment = infoUri.fragment
 				//add authURL to query
 				URI(scheme, userInfo, host, port, path, query, fragment)
-			}?: URI(authURL)
+			} ?: URI(authURL)
 
 			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 				Desktop.getDesktop().browse(browseURI)
@@ -79,7 +81,7 @@ open class DesktopAuthController(val infoUrl: String? = null) : AuthenticationCo
 	 */
 	protected fun handleDesktopUnsupported(browseURI: URI) {
 		System.err.println(
-			"""
+				"""
 				Desktop is not supported in this environment! Cannot open browser for authentication.
 				You can paste the following URL into a web browser:
 				

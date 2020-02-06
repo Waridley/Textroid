@@ -4,17 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Updates.set
 import com.mongodb.client.model.Updates.unset
-import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Filters.exists
-import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.IndexOptions
-import com.mongodb.client.model.ReturnDocument
 import com.waridley.textroid.engine.*
 import com.waridley.textroid.mongo.at
+import com.waridley.textroid.mongo.before
 import com.waridley.textroid.mongo.eq
 import com.waridley.textroid.mongo.getOrCreateCollection
 import org.bson.Document
-import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import org.litote.kmongo.id.toId
@@ -26,11 +23,11 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 	
 	override fun new(username: Player.Name): Player {
 		val result = col.updateOne(
-			Player::username eq username,
-			setOnInsert(Player::username, username),
-			upsert()
+				Player::username eq username,
+				setOnInsert(Player::username, username),
+				upsert()
 		)
-		return result.upsertedId?.asObjectId()?.value?.playerId storedIn this?: throw PlayerCreationException(result)
+		return result.upsertedId?.asObjectId()?.value?.playerId storedIn this ?: throw PlayerCreationException(result)
 	}
 	
 	override operator fun get(id: PlayerId): Player? {
@@ -42,13 +39,14 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 	}
 	
 	
-	
 	override fun <T> readAttribute(id: PlayerId, path: String, type: Class<T>): MaybeAttribute<T>? {
 		return col.find(id.filter)
-			.projection("{\"$path\":1}")
-			.first()?.let{ it.at(path.split("."))?.let { value ->
-				path stores mapper.convertValue(value, type)
-			}?: path.clear }
+				.projection("{\"$path\":1}")
+				.first()?.let {
+					it.at(path.split("."))?.let { value ->
+						path stores mapper.convertValue(value, type)
+					} ?: path.clear
+				}
 	}
 	
 	override fun <T> readUnique(id: PlayerId, path: String, type: Class<T>): MaybeAttribute<T>? {
@@ -59,14 +57,14 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 	
 	override fun <T> writeAttribute(id: PlayerId, attribute: MaybeAttribute<T>): MaybeAttribute<Any?>? {
 		return col.findOneAndUpdate(
-			id.filter,
-			when(attribute) {
-				is Attribute -> set(attribute.path, attribute.value)
-				is Undefined -> unset(attribute.path)
-			},
-			previous
+				id.filter,
+				when (attribute) {
+					is Attribute -> set(attribute.path, attribute.value)
+					is Undefined -> unset(attribute.path)
+				},
+				before()
 		)?.let {
-			it[attribute.path]?.let { value -> attribute.path stores value }?: attribute.path.clear
+			it[attribute.path]?.let { value -> attribute.path stores value } ?: attribute.path.clear
 		}
 	}
 	
@@ -76,12 +74,11 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 	}
 	
 	
-	
 	private fun Document.intoPlayer(): Player {
 		return Player(
 				(this["_id"] as ObjectId).playerId,
 				this@MongoPlayerStorage
-			)
+		)
 	}
 	
 	private fun ensureUnique(path: String, options: IndexOptions = IndexOptions()): String {
@@ -91,7 +88,6 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 }
 
 internal val PlayerId.filter get() = PlayerId::_id eq _id
-private val previous: FindOneAndUpdateOptions = FindOneAndUpdateOptions().returnDocument(ReturnDocument.BEFORE)
 private val ObjectId.playerId get() = toId<Player>().toPlayerId()
 
-val  Attribute<*>.filter get() = path eq value
+val Attribute<*>.filter get() = path eq value

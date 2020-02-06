@@ -7,7 +7,7 @@ plugins {
 allprojects {
 	group = "com.waridley"
 	version = "0.2"
-
+	
 	apply(plugin = "java")
 	apply(plugin = "kotlin")
 	
@@ -22,10 +22,10 @@ allprojects {
 		implementation("com.natpryce", "result4k", "2.0.0")
 		implementation("com.fasterxml.jackson.core", "jackson-annotations", "2.9.7")
 		implementation("com.github.ajalt", "clikt", "2.3.0")
-		implementation("ch.qos.logback","logback-classic","1.2.3")
+		implementation("ch.qos.logback", "logback-classic", "1.2.3")
 		implementation("com.github.philippheuer.events4j", "events4j-handler-reactor", "0.7.1")
-
-
+		
+		
 		//Twitch4j dependencies because Spring dependency-management plugin does not work with composite builds
 		implementation("com.apollographql.apollo:apollo-runtime:1.2.2")
 		implementation("com.apollographql.apollo:apollo-gradle-plugin:1.2.2")
@@ -66,9 +66,9 @@ dependencies {
 	implementation(project("mongo"))
 	implementation(project("ttv:chat_client"))
 	implementation(project("ttv:monitor"))
-
-
-
+	
+	
+	
 	implementation("com.fasterxml.jackson.core", "jackson-databind", "2.9.7")
 }
 
@@ -86,20 +86,23 @@ tasks {
 
 task("publishDeps", Exec::class) {
 	environment("CI_COMMIT_REF_NAME", "64.$version")
-	if(Os.isFamily(Os.FAMILY_WINDOWS)) {
+	if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 		executable("cmd.exe")
 		args("TODO")
-	} else if(Os.isFamily(Os.FAMILY_UNIX)) {
+	} else if (Os.isFamily(Os.FAMILY_UNIX)) {
 		executable("bash")
-		args("-c", "cd credential-manager && ./gradlew publishToMavenLocal && cd ../twitch4j && ./gradlew publishToMavenLocal")
+		args(
+				"-c",
+				"cd credential-manager && ./gradlew publishToMavenLocal && cd ../twitch4j && ./gradlew publishToMavenLocal"
+		)
 	}
 }
 
 task("setEnv", Exec::class) {
-	if(Os.isFamily(Os.FAMILY_WINDOWS)) {
+	if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 		executable("cmd.exe")
 		args("TODO")
-	} else if(Os.isFamily(Os.FAMILY_UNIX)) {
+	} else if (Os.isFamily(Os.FAMILY_UNIX)) {
 		executable("bash")
 		args("-c", "export CI_COMMIT_REF_NAME=64.$version")
 	}

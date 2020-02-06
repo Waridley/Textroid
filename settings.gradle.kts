@@ -1,16 +1,16 @@
 rootProject.name = "Textroid"
 
 include(
-	"api",
-	"api:backend",
-	"api:frontend",
-	"credentials",
-	"engine",
-	"mongo",
-	"server",
-	"ttv",
-	"ttv:chat_client",
-	"ttv:monitor"
+		"api",
+		"api:backend",
+		"api:frontend",
+		"credentials",
+		"engine",
+		"mongo",
+		"server",
+		"ttv",
+		"ttv:chat_client",
+		"ttv:monitor"
 )
 
 

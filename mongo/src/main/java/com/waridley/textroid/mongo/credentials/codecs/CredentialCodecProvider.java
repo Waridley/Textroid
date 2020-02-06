@@ -8,9 +8,9 @@ import org.bson.codecs.configuration.CodecRegistry;
 
 public class CredentialCodecProvider implements CodecProvider {
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
 //		if(OAuth2Credential.class.isAssignableFrom(clazz)) {
 //			return (Codec<T>) new OAuth2Codec();
 //		} else if(NamedOAuth2Credential.class.isAssignableFrom(clazz)) {
@@ -23,10 +23,10 @@ public class CredentialCodecProvider implements CodecProvider {
 //					.build();
 //			return pojoCodecProvider.get(clazz, registry);
 //		} else
-			if(Credential.class.isAssignableFrom(clazz)) {
-			return (Codec<T>) new CredentialCodec(registry);
-		}
+        if (Credential.class.isAssignableFrom(clazz)) {
+            return (Codec<T>) new CredentialCodec(registry);
+        }
 
-		return null;
-	}
+        return null;
+    }
 }

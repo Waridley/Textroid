@@ -4,7 +4,7 @@ import com.github.philippheuer.credentialmanager.api.IOAuth2StorageBackend
 import com.github.philippheuer.credentialmanager.domain.Credential
 import java.util.*
 
-abstract class CredentialMap<T>: AbstractMutableMap<T, Credential?>(), IOAuth2StorageBackend {
+abstract class CredentialMap<T> : AbstractMutableMap<T, Credential?>(), IOAuth2StorageBackend {
 	
 	override fun loadCredentials(): MutableList<Credential?> {
 		return values.toMutableList()

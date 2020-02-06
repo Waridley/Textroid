@@ -20,23 +20,24 @@ import java.util.*
 class MongoCredentialMap<T>(db: MongoDatabase, collectionName: String = "credentials") : CredentialMap<T>() {
 	
 	private val collection = db.getOrCreateCollection<Document>(collectionName)
-			.withCodecRegistry(fromRegistries(
-				MongoClient.getDefaultCodecRegistry(),
-				CodecRegistries.fromProviders(CredentialCodecProvider())
-			)
-		).withKMongo()
+			.withCodecRegistry(
+					fromRegistries(
+							MongoClient.getDefaultCodecRegistry(),
+							CodecRegistries.fromProviders(CredentialCodecProvider())
+					)
+			).withKMongo()
 	
 	override val entries: MutableSet<MutableMap.MutableEntry<T, Credential?>>
-		get() =  collection.find(Entry<T>::value.exists()).toMutableSet().toMutableSet().map {
+		get() = collection.find(Entry<T>::value.exists()).toMutableSet().toMutableSet().map {
 			@Suppress("UNCHECKED_CAST")
 			Entry<T>(it["key"] as T, it["value"].docToCredential())
 		}.toMutableSet()
 	
 	override fun put(key: T, value: Credential?): Credential? {
 		return collection.findOneAndUpdate(
-			"key" eq key,
-			combine(Updates.set("key", key), Updates.set("value", value)),
-			findOneAndUpdateUpsert().returnDocument(ReturnDocument.BEFORE)
+				"key" eq key,
+				combine(Updates.set("key", key), Updates.set("value", value)),
+				findOneAndUpdateUpsert().returnDocument(ReturnDocument.BEFORE)
 		)?.get("value")?.docToCredential()
 	}
 	
@@ -49,10 +50,18 @@ class MongoCredentialMap<T>(db: MongoDatabase, collectionName: String = "credent
 	}
 	
 	override fun getCredentialByUserId(userId: String): Optional<Credential> {
-		return Optional.ofNullable(collection.findOne(Document("value", Document("userId", userId)))?.get("value").docToCredential())
+		return Optional.ofNullable(
+				collection.findOne(
+						Document(
+								"value",
+								Document("userId", userId)
+						)
+				)?.get("value").docToCredential()
+		)
 	}
 	
-	data class Entry<T>(override val key: T, override var value: Credential?): MutableMap.MutableEntry<T, Credential?> {
+	data class Entry<T>(override val key: T, override var value: Credential?) :
+			MutableMap.MutableEntry<T, Credential?> {
 		
 		override fun setValue(newValue: Credential?): Credential {
 			throw UnsupportedOperationException("I can't figure out how to implement this.")
@@ -64,13 +73,13 @@ class MongoCredentialMap<T>(db: MongoDatabase, collectionName: String = "credent
 		return this?.let {
 			val doc = this as Document
 			collection.codecRegistry.get(Credential::class.java).decode(
-				BsonDocumentReader(
-					doc.toBsonDocument(
-						Credential::class.java,
-						collection.codecRegistry
-					)
-				),
-				DecoderContext.builder().build()
+					BsonDocumentReader(
+							doc.toBsonDocument(
+									Credential::class.java,
+									collection.codecRegistry
+							)
+					),
+					DecoderContext.builder().build()
 			)
 		}
 	}

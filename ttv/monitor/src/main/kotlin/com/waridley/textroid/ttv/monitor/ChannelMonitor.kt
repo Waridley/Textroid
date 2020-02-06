@@ -5,8 +5,8 @@ import com.github.twitch4j.pubsub.TwitchPubSub
 import com.waridley.textroid.credentials.AuthenticationHelper
 
 class ChannelMonitor(
-	authHelper: AuthenticationHelper,
-	eventManager: EventManager = EventManager().apply { autoDiscovery() }
+		authHelper: AuthenticationHelper,
+		eventManager: EventManager = EventManager().apply { autoDiscovery() }
 ) {
 
 	init {

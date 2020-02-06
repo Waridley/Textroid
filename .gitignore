@@ -5,7 +5,7 @@
 /api/frontend/build/
 /build/
 /credentials/build/
-/game/build/
+/engine/build/
 /mongo/build/
 /mongo/build/classes/java/main/
 /server/build/
