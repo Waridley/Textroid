@@ -88,7 +88,9 @@ task("publishDeps", Exec::class) {
 	environment("CI_COMMIT_REF_NAME", "64.$version")
 	if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 		executable("cmd.exe")
-		args("TODO")
+		args(
+				"/C",
+				"cd credential-manager && gradlew.bat publishToMavenLocal && cd ../twitch4j && gradlew.bat publishToMavenLocal")
 	} else if (Os.isFamily(Os.FAMILY_UNIX)) {
 		executable("bash")
 		args(
@@ -101,7 +103,7 @@ task("publishDeps", Exec::class) {
 task("setEnv", Exec::class) {
 	if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 		executable("cmd.exe")
-		args("TODO")
+		args("/C", "set CI_COMMIT_REF_NAME=64.$version")
 	} else if (Os.isFamily(Os.FAMILY_UNIX)) {
 		executable("bash")
 		args("-c", "export CI_COMMIT_REF_NAME=64.$version")
