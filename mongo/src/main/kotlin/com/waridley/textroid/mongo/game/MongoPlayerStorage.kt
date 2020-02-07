@@ -6,7 +6,7 @@ import com.mongodb.client.model.Updates.set
 import com.mongodb.client.model.Updates.unset
 import com.mongodb.client.model.Filters.exists
 import com.mongodb.client.model.IndexOptions
-import com.waridley.textroid.engine.*
+import com.waridley.textroid.api.*
 import com.waridley.textroid.mongo.at
 import com.waridley.textroid.mongo.before
 import com.waridley.textroid.mongo.eq
@@ -16,7 +16,8 @@ import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import org.litote.kmongo.id.toId
 
-class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") : PlayerStorageInterface {
+class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") :
+		PlayerStorageInterface {
 	
 	private val col = db.getOrCreateCollection<Document>(collectionName).withKMongo()
 	val mapper = ObjectMapper()
@@ -27,7 +28,9 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 				setOnInsert(Player::username, username),
 				upsert()
 		)
-		return result.upsertedId?.asObjectId()?.value?.playerId storedIn this ?: throw PlayerCreationException(result)
+		return result.upsertedId?.asObjectId()?.value?.playerId storedIn this ?: throw PlayerCreationException(
+				result
+		)
 	}
 	
 	override operator fun get(id: PlayerId): Player? {

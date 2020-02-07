@@ -5,14 +5,23 @@ import com.github.philippheuer.credentialmanager.domain.Credential
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.mongodb.MongoClient
 import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.*
 import com.mongodb.client.model.Filters.exists
-import com.waridley.textroid.mongo.*
+import com.mongodb.client.model.FindOneAndReplaceOptions
+import com.mongodb.client.model.FindOneAndUpdateOptions
+import com.mongodb.client.model.IndexOptions
+import com.mongodb.client.model.ReturnDocument
+import com.waridley.textroid.mongo.andOr
+import com.waridley.textroid.mongo.containsAll
 import com.waridley.textroid.mongo.credentials.codecs.CredentialCodecProvider
+import com.waridley.textroid.mongo.eq
+import com.waridley.textroid.mongo.getOrCreateCollection
 import org.bson.codecs.configuration.CodecRegistries
 import org.bson.conversions.Bson
-import org.litote.kmongo.*
+import org.litote.kmongo.ensureIndex
+import org.litote.kmongo.updateOne
+import org.litote.kmongo.upsert
 import org.litote.kmongo.util.KMongoUtil
+import org.litote.kmongo.withKMongo
 
 class MongoOAuth2StorageBackend(db: MongoDatabase, collectionName: String = "credentials") : IOAuth2StorageBackend {
 	
@@ -60,7 +69,7 @@ class MongoOAuth2StorageBackend(db: MongoDatabase, collectionName: String = "cre
 		return collection.findOneAndUpdate(
 				createFilter(oldCred),
 				KMongoUtil.toBsonModifier(newCred, updateOnlyNonNull),
-				if (upsert) findOneAndUpdateUpsert() else FindOneAndUpdateOptions()
+				FindOneAndUpdateOptions().upsert(upsert).returnDocument(ReturnDocument.BEFORE)
 		)
 	}
 	
@@ -68,7 +77,7 @@ class MongoOAuth2StorageBackend(db: MongoDatabase, collectionName: String = "cre
 		return collection.findOneAndReplace(
 				createFilter(oldCred),
 				newCred,
-				FindOneAndReplaceOptions().returnDocument(ReturnDocument.BEFORE)
+				FindOneAndReplaceOptions().upsert(upsert).returnDocument(ReturnDocument.BEFORE)
 		)
 	}
 	

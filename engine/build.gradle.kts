@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 dependencies {
-	implementation("org.litote.kmongo", "kmongo-id-jackson", "3.12.0")
-	implementation("com.natpryce", "result4k")
+	api(project(":api"))
+	
 	implementation("com.fasterxml.jackson.core", "jackson-annotations")
 	implementation(kotlin("scripting-jsr223"))
 }

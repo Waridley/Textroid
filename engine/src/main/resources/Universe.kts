@@ -8,4 +8,4 @@ object Textroid_Universe : GameWorld("The Textroid Universe") {
 	}
 }
 
-Textroid_Universe
+Textroid_Universe //Return to script invoker

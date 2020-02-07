@@ -1,7 +1,7 @@
 package com.waridley.textroid.ttv
 
 import com.github.twitch4j.helix.domain.User
-import com.waridley.textroid.engine.Player
+import com.waridley.textroid.api.Player
 
 class TtvUser(val helixUser: User) {
 	val id: String = helixUser.id

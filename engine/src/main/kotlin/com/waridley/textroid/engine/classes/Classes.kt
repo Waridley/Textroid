@@ -3,13 +3,14 @@
 package com.waridley.textroid.engine.classes
 
 import kotlin.reflect.KProperty
+import kotlin.reflect.full.memberProperties
 
 abstract class Entity(description: String? = null) {
 	var name = this::class.simpleName?.replace("_", " ") ?: "Entity"
 	var description = description ?: name
 	var fullName = this::class.qualifiedName
 	val contents
-		get() = this::class.members
+		get() = this::class.memberProperties
 				        .map { it.name }
 				        .filter {
 					        !arrayOf("contents", "storage", "equals", "hashCode", "invoke", "toString").contains(it)

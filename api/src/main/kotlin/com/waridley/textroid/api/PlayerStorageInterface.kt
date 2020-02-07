@@ -1,6 +1,6 @@
 @file:Suppress("UNUSED")
 
-package com.waridley.textroid.engine
+package com.waridley.textroid.api
 
 import kotlin.reflect.KProperty
 

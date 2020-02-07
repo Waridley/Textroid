@@ -1,4 +1,4 @@
-package com.waridley.textroid.engine
+package com.waridley.textroid.api
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonValue
@@ -26,18 +26,18 @@ class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 	
 	//	inline fun <reified T> readAttribute(property: KProperty<T>): MaybeAttribute<T> = storage.readAttribute(id, property)
 //		?: throw AttributeException("Failed to get value for attribute \"${property.name}\"")
-	inline fun <reified T> readUnique(path: String): MaybeAttribute<T> = storage.readUnique(id, path, T::class.java)
-	                                                                     ?: throw AttributeException("Failed to get value for unique attribute \"$path\"")
+	inline fun <reified T> readUnique(path: String): MaybeAttribute<T> =
+			storage.readUnique(id, path, T::class.java)?: throw AttributeException("Failed to get value for unique attribute \"$path\"")
 	
 	operator fun <T> set(path: String, value: T) = writeAttribute(path stores value)
 	//	operator fun <T> set(kProperty: KProperty<T>, value: T) = set(kProperty.name, value)
 	fun clear(path: String) = writeAttribute(path.clear)
 	
-	fun <T> writeAttribute(attribute: MaybeAttribute<T>) = storage.writeAttribute(id, attribute)
-	                                                       ?: throw AttributeAssignmentException(id, attribute)
+	fun <T> writeAttribute(attribute: MaybeAttribute<T>) =
+			storage.writeAttribute(id, attribute)?: throw AttributeAssignmentException(id, attribute)
 	
-	fun <T> writeUnique(attribute: MaybeAttribute<T>) = storage.writeUnique(id, attribute)
-	                                                    ?: throw AttributeAssignmentException(id, attribute)
+	fun <T> writeUnique(attribute: MaybeAttribute<T>) =
+			storage.writeUnique(id, attribute)?: throw AttributeAssignmentException(id, attribute)
 	
 	override fun toString() = id.toString()
 	
@@ -49,7 +49,8 @@ class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 				Attrs("${context.qualifiedName}.")
 			}
 			
-			inline operator fun <reified Context> invoke() = invoke(Context::class)
+			inline operator fun <reified Context> invoke() =
+					invoke(Context::class)
 		}
 		
 		fun <T> filter(property: KProperty<*>, value: T): Attribute<T> = "${namespace}${property.name}" stores value
@@ -69,7 +70,8 @@ class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 					Unique("${context.qualifiedName}.")
 				}
 				
-				inline operator fun <reified Context> invoke() = invoke(Context::class)
+				inline operator fun <reified Context> invoke() =
+						invoke(Context::class)
 			}
 			
 			inline operator fun <reified T> getValue(player: Player, property: KProperty<*>) =
@@ -87,7 +89,10 @@ class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 		
 		companion object {
 			private fun String.validate() {
-				fun err(reason: String): Nothing = throw InvalidUsernameException(reason, this)
+				fun err(reason: String): Nothing = throw InvalidUsernameException(
+						reason,
+						this
+				)
 				when {
 					contains("\\s".toRegex()) -> err("Contains whitespace")
 					isBlank()                 -> err("Blank")
@@ -109,7 +114,8 @@ class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 inline class PlayerId(val _id: Id<Player>)
 
 infix fun PlayerId?.storedIn(storage: PlayerStorageInterface) = this?.let { storage[it] }
-fun Id<Player>.toPlayerId() = PlayerId(this)
+fun Id<Player>.toPlayerId() =
+		PlayerId(this)
 
 fun String.asUsername() = Player.Name(this)
 
@@ -117,12 +123,14 @@ sealed class MaybeAttribute<out T>(val path: String)
 
 fun <T> MaybeAttribute<T>?.unwrap(): T = when (this) {
 	is Attribute -> value
-	else         -> throw AttributeException(message = "Tried to unwrap non-existent attribute \"${this?.path}\"")
+	else                                                      -> throw AttributeException(
+			message = "Tried to unwrap non-existent attribute \"${this?.path}\""
+	)
 }
 
 fun <T> MaybeAttribute<T>?.orNull(): T? = when (this) {
 	is Attribute -> value
-	else         -> null
+	else                                                      -> null
 }
 
 data class Attribute<out T>(private val _path: String, val value: T) : MaybeAttribute<T>(_path)
@@ -137,12 +145,11 @@ data class InvalidUsernameException(val reason: String? = null, val input: Any? 
 open class AttributeException(message: String? = null, cause: Throwable? = null) : Exception(message, cause)
 open class AttributeAssignmentException(id: PlayerId?,
                                         attribute: MaybeAttribute<*>?,
-                                        failure: Failure<Throwable>? = null)
-	: AttributeException(
+                                        failure: Failure<Throwable>? = null): AttributeException(
 		when (attribute) {
 			is Attribute -> "Failed to set attribute \"${attribute.path}\" to ${attribute.value} for player ${id?._id}"
 			is Undefined -> "Failed to clear attribute \"${attribute.path}\" for player ${id?._id}"
-			else         -> null
+			else                                                      -> null
 		},
 		failure?.reason
 )

@@ -19,6 +19,7 @@ allprojects {
 	
 	dependencies {
 		implementation(kotlin("stdlib-jdk8"))
+		implementation("org.litote.kmongo", "kmongo-id-jackson", "3.12.0")
 		implementation("com.natpryce", "result4k", "2.0.0")
 		implementation("com.fasterxml.jackson.core", "jackson-annotations", "2.9.7")
 		implementation("com.github.ajalt", "clikt", "2.3.0")

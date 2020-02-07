@@ -1,8 +1,8 @@
 package com.waridley.textroid
 
 import com.mongodb.ConnectionString
-import com.waridley.textroid.engine.Player
-import com.waridley.textroid.engine.asUsername
+import com.waridley.textroid.api.Player
+import com.waridley.textroid.api.asUsername
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
 import org.litote.kmongo.KMongo
 import kotlin.random.Random
