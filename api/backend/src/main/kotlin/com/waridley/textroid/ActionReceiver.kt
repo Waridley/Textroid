@@ -1,0 +1,14 @@
+package com.waridley.textroid
+
+import com.waridley.textroid.api.ActionMediator
+import com.waridley.textroid.api.Player
+
+class ActionReceiver: ActionMediator {
+	override fun loadPlayerByTtvLogin(login: String): Player? {
+		TODO("auto-generated function body")
+	}
+	
+	override fun loadPlayerByTtvUserId(userId: String): Player? {
+		TODO("auto-generated function body")
+	}
+}

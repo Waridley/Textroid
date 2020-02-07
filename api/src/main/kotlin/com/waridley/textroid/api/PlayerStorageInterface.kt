@@ -25,7 +25,16 @@ interface PlayerStorageInterface {
 	operator fun get(username: Player.Name) = this["username" stores username].firstOrNull()
 	
 	/** @return A list of players that match the given attribute */
-	operator fun <T> get(attribute: Attribute<T>): Iterable<Player>
+	operator fun get(attribute: Attribute<*>): Iterable<Player>
+	
+	fun findOne(uniqueAttribute: Attribute<*>): Player? =
+			get(uniqueAttribute).apply { if(this.count() > 1) throw PlayerNotFoundException(this) }.firstOrNull()
+	
+	fun findOrCreateOne(uniqueAttribute: Attribute<*>, username: Player.Name, nickname: Player.Name = username): Player =
+			findOne(uniqueAttribute)?: new(username)
+	
+	fun findOrCreateOne(uniqueAttribute: Attribute<*>, username: String, nickName: String = username): Player =
+			findOrCreateOne(uniqueAttribute, Player.Name(username))
 	
 	/** @return The value stored in the given path if it exited for the given player, Undefined if it was missing for the player, or null if the player was not found. */
 	fun <T> readAttribute(id: PlayerId, path: String, type: Class<T>): MaybeAttribute<T>?
@@ -60,3 +69,4 @@ inline fun <reified T> PlayerStorageInterface.readUnique(id: PlayerId, property:
 }
 
 data class PlayerCreationException(val reason: Any? = null, override val cause: Throwable? = null) : Exception(cause)
+data class PlayerNotFoundException(val reason: Any? = null, override val cause: Throwable? = null) : Exception(cause)

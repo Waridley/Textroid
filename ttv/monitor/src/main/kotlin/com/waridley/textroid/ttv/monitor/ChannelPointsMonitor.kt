@@ -4,10 +4,9 @@ import com.github.philippheuer.events4j.core.EventManager
 import com.github.twitch4j.pubsub.TwitchPubSub
 import com.waridley.textroid.credentials.AuthenticationHelper
 
-class ChannelMonitor(
+class ChannelPointsMonitor(
 		authHelper: AuthenticationHelper,
-		eventManager: EventManager = EventManager().apply { autoDiscovery() }
-) {
+		val eventManager: EventManager = EventManager().apply { autoDiscovery() }) {
 
 	init {
 		authHelper.retrieveCredential("TtvChannelMonitorCredential", listOf("channel:read:redemptions")) {

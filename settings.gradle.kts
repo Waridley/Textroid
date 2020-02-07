@@ -35,3 +35,5 @@ includeBuild("twitch4j") {
 		substitute(module("com.github.twitch4j:twitch4j-rest-tmi")).with(project(":twitch4j-rest-tmi"))
 	}
 }
+include("ttv:event_handler")
+findProject(":ttv:event_handler")?.name = "event_handler"

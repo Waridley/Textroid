@@ -2,16 +2,18 @@ package com.waridley.textroid
 
 import com.mongodb.ConnectionString
 import com.waridley.textroid.api.Player
-import com.waridley.textroid.api.asUsername
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
+import com.waridley.textroid.ttv.TtvUser
 import org.litote.kmongo.KMongo
 import kotlin.random.Random
 import kotlin.random.nextULong
+import kotlin.reflect.full.extensionReceiverParameter
+import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.jvm.jvmErasure
 
 fun main(args: Array<String>) {
-
+	testPlayer(args[0])
 }
-
 
 @ExperimentalUnsignedTypes
 @Suppress("UNUSED")
@@ -31,7 +33,7 @@ fun testPlayer(connStr: String) {
 	player4?.brain = "Nope! :)"
 	println(player4?.brain)
 	
-	player4?.nickname = Random.nextULong().toString(32).asUsername()
+	player4?.nickname = Player.Name(Random.nextULong().toString(32))
 	
 	println("Random player username: ${randomPlayer.username}")
 	println("Random player nickname: ${randomPlayer.nickname}")
@@ -60,6 +62,7 @@ fun testPlayer(connStr: String) {
 			Long.MAX_VALUE.toString(2),
 			"testuser4"
 	)
+	
 }
 
 infix fun Player?.offer(amount: Int) = Offer(this, amount)
@@ -72,5 +75,4 @@ fun printString(s: String?) {
 class Launcher
 
 var Player.answer: Int by Player.Attrs(Launcher::class)
-var Player.brain: String by Player.Attrs.Unique(Launcher::class)
-
+var Player.brain: String by Player.Attrs(Launcher::class)

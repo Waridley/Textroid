@@ -1,22 +1,19 @@
 package com.waridley.textroid.ttv
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonValue
+import com.github.twitch4j.helix.TwitchHelix
 import com.github.twitch4j.helix.domain.User
 import com.waridley.textroid.api.Player
 
-class TtvUser(val helixUser: User) {
-	val id: String = helixUser.id
-	var offlineMinutes = 0L
-	var onlineMinutes = 0L
-	var guestMinutes = 0L
-	val properties: MutableMap<String, Any> = HashMap()
+class TtvUser(@JsonValue val id: TtvUserId, val storage: TtvUserStorageInterface) {
 	
-	fun channelMinutes(): Long {
-		return onlineMinutes + offlineMinutes
-	}
+	val helixUser: User? get() = storage.getHelixUser(id)
 	
-	fun totalMinutes(): Long {
-		return onlineMinutes + offlineMinutes + guestMinutes
-	}
 }
 
-var Player.ttvUserId: String by Player.Attrs.Unique<TtvUser>()
+@JsonIgnoreProperties(ignoreUnknown = true)
+inline class TtvUserId(val _id: String)
+
+val twitch = Unit
+var Player.userId: String by Player.Attrs.Unique(::twitch)

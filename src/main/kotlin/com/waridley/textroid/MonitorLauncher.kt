@@ -10,7 +10,7 @@ import com.mongodb.ConnectionString
 import com.waridley.textroid.credentials.AuthenticationHelper
 import com.waridley.textroid.credentials.DesktopAuthController
 import com.waridley.textroid.mongo.credentials.MongoCredentialMap
-import com.waridley.textroid.ttv.monitor.ChannelMonitor
+import com.waridley.textroid.ttv.monitor.ChannelPointsMonitor
 import org.litote.kmongo.KMongo
 
 class MonitorLauncher : CliktCommand() {
@@ -50,7 +50,7 @@ class MonitorLauncher : CliktCommand() {
 		credentialManager.registerIdentityProvider(idProvider)
 		
 		val authHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
-		ChannelMonitor(authHelper)
+		ChannelPointsMonitor(authHelper)
 		
 	}
 }

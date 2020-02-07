@@ -37,7 +37,7 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 		return col.find(id.filter).projection(PlayerId::_id).first()?.intoPlayer()
 	}
 	
-	override operator fun <T> get(attribute: Attribute<T>): Iterable<Player> {
+	override operator fun get(attribute: Attribute<*>): Iterable<Player> {
 		return col.find(attribute.filter).onEach { println(it) }.map { it.intoPlayer() }
 	}
 	
@@ -48,7 +48,7 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 				.first()?.let {
 					it.at(path.split("."))?.let { value ->
 						path stores mapper.convertValue(value, type)
-					} ?: path.clear
+					} ?: path.undefined
 				}
 	}
 	
@@ -67,7 +67,7 @@ class MongoPlayerStorage(db: MongoDatabase, collectionName: String = "players") 
 				},
 				before()
 		)?.let {
-			it[attribute.path]?.let { value -> attribute.path stores value } ?: attribute.path.clear
+			it[attribute.path]?.let { value -> attribute.path stores value } ?: attribute.path.undefined
 		}
 	}
 	

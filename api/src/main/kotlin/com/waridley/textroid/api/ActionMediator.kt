@@ -1,6 +1,6 @@
 package com.waridley.textroid.api
 
-interface CommandMediator {
+interface ActionMediator {
 	fun loadPlayerByTtvLogin(login: String): Player?
 	fun loadPlayerByTtvUserId(userId: String): Player?
 }

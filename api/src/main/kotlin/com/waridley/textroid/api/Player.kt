@@ -4,13 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonValue
 import com.natpryce.Failure
 import org.litote.kmongo.Id
-import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
+import kotlin.reflect.*
+import kotlin.reflect.full.extensionReceiverParameter
+import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.jvm.jvmErasure
 
 @Suppress("UNUSED")
 class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 	
-	var username: Name by uniqueAttrs
+	var username: Name by Attrs.Unique(null)
 	
 	var nickname: Name
 		get() = readAttribute<Name>("nickname").orNull() ?: username
@@ -31,7 +33,7 @@ class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 	
 	operator fun <T> set(path: String, value: T) = writeAttribute(path stores value)
 	//	operator fun <T> set(kProperty: KProperty<T>, value: T) = set(kProperty.name, value)
-	fun clear(path: String) = writeAttribute(path.clear)
+	fun clear(path: String) = writeAttribute(path.undefined)
 	
 	fun <T> writeAttribute(attribute: MaybeAttribute<T>) =
 			storage.writeAttribute(id, attribute)?: throw AttributeAssignmentException(id, attribute)
@@ -41,44 +43,105 @@ class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 	
 	override fun toString() = id.toString()
 	
-	class Attrs internal constructor(val namespace: String) {
+	data class Attrs internal constructor(val receiver: KAnnotatedElement?) {
+		
+		val receiverPath = receiver.path.run { if(!isEmpty()) "$this." else this }
 		
 		companion object {
-			private val cache = mutableMapOf<KClass<*>, Attrs>()
-			operator fun invoke(context: KClass<*>) = cache.getOrPut(context) {
-				Attrs("${context.qualifiedName}.")
-			}
-			
-			inline operator fun <reified Context> invoke() =
-					invoke(Context::class)
+			operator fun <T> invoke(receiver: KCallable<T>) = Attrs(receiver)
+			operator fun <T: Any> invoke(receiver: KClass<T>) = Attrs(receiver)
+			inline operator fun <reified T: Any> invoke() = invoke(T::class)
 		}
 		
-		fun <T> filter(property: KProperty<*>, value: T): Attribute<T> = "${namespace}${property.name}" stores value
-		fun clear(property: KProperty<*>): Undefined = "${namespace}${property.name}".clear
+//		class AttrsFactory(val context: KClass<*>) {
+//			operator fun invoke(prop: KProperty<*>): Attrs {
+//				return Attrs[context, prop]
+//			}
+//		}
 		
-		inline operator fun <reified T> getValue(player: Player, property: KProperty<*>) =
-				player.get<T>("${namespace}${property.name}")
-		
-		operator fun <T> setValue(player: Player, property: KProperty<*>, value: T) =
-				player.set("${namespace}${property.name}", value)
-		
-		class Unique internal constructor(val namespace: String) {
+//		companion object {
+//			internal val root = Attrs("")
+//			private val contextMap = mutableMapOf<KClass<*>, Attrs<*>>()
+//			private val propertyPaths = mutableMapOf<KProperty<*>, String>()
 			
-			companion object {
-				private val cache = mutableMapOf<KClass<*>, Unique>()
-				operator fun invoke(context: KClass<*>) = cache.getOrPut(context) {
-					Unique("${context.qualifiedName}.")
-				}
-				
-				inline operator fun <reified Context> invoke() =
-						invoke(Context::class)
+//			operator fun get(context: KClass<*>) = AttrsFactory(context)
+			
+//			operator fun get(context: KClass<*>, prop: KProperty<*>): Attrs {
+//				return contextMap.getOrPut(context) { Attrs("${context.qualifiedName}.") }.apply { prop.registerPath() }
+//			}
+			
+//			inline operator fun <reified Context> invoke(prop: KProperty<*>) = this[Context::class, prop]
+			
+//			operator fun get(key: KProperty<*>) = propertyPaths[key]
+			
+//		}
+		
+//		fun <T> filter(property: KProperty<*>, value: T) = path stores value
+//		fun clear(property: KProperty<*>) = path.undefined
+		
+		inline operator fun <reified T> getValue(player: Player, property: KProperty<*>): T  {
+			return player["$receiverPath${property.name}"]
+		}
+		operator fun <T> setValue(player: Player, property: KProperty<*>, value: T) {
+			player["$receiverPath${property.name}"] = value
+		}
+		
+//		fun KProperty<*>.registerPath() = propertyPaths[this]?.also {
+//					if(!it.startsWith(namespace)) {
+//						throw AttributeException("Property namespace conflict: existing = $it | conflicting = $namespace${this.name}")
+//					} else if(extensionReceiverParameter != Player::username.extensionReceiverParameter) {
+//						throw AttributeException("Property must be an extension of Player")
+//					}
+//				} ?: "$namespace${this.name}".also { propertyPaths[this] = it }
+		
+//		val KProperty<*>.path
+//			get() = propertyPaths[this]?: throw AttributeException("No path found in ${this@Attrs} for property: $this")
+		
+		data class Unique internal constructor(val receiver: KAnnotatedElement?) {
+			
+			val receiverPath = receiver.path.run { if(!isEmpty()) "$this." else this }
+			
+			companion object{
+				operator fun <T> invoke(receiver: KCallable<T>) = Unique(receiver)
+				operator fun <T: Any> invoke(receiver: KClass<T>) = Unique(receiver)
+				inline operator fun <reified T: Any> invoke() = invoke(T::class)
 			}
 			
-			inline operator fun <reified T> getValue(player: Player, property: KProperty<*>) =
-					player.readUnique<T>("${namespace}${property.name}").unwrap()
+//			class UniqueAttrsFactory(val context: KClass<*>) {
+//				operator fun invoke(prop: KProperty<*>): Unique {
+//					return Unique[context, prop]
+//				}
+//			}
 			
-			operator fun <T> setValue(player: Player, property: KProperty<*>, value: T) =
-					player.writeUnique("${namespace}${property.name}" stores value)
+//			companion object {
+//				internal val root = Unique("")
+//				internal val contextMap = mutableMapOf<KClass<*>, Unique<*>>()
+				
+//				operator fun get(context: KClass<*>) = UniqueAttrsFactory(context)
+				
+//				operator fun get(context: KClass<*>, prop: KProperty<*>): Unique {
+//					return contextMap.getOrPut(context) { Unique("${context.qualifiedName}.") }.apply { prop.registerPath() }
+//				}
+				
+//				inline operator fun <reified Context> invoke(prop: KProperty<*>) = this[Context::class, prop]
+//			}
+			
+			inline operator fun <reified T> getValue(player: Player, property: KProperty<*>): T {
+				return player.readUnique<T>("$receiverPath${property.name}").unwrap()
+			}
+			
+			operator fun <T> setValue(player: Player, property: KProperty<*>, value: T) {
+				player.writeUnique("$receiverPath${property.name}" stores value)
+			}
+			
+//			fun KProperty<*>.registerPath() = propertyPaths[this]?.also {
+//						if(!it.startsWith(namespace)) {
+//							throw AttributeException("Property namespace conflict: existing = $it | conflicting = $namespace${this.name}")
+//						}
+//					} ?: "$namespace${this.name}".also { propertyPaths[this] = it }
+//
+//			val KProperty<*>.path
+//				get() = propertyPaths[this]?: throw AttributeException("No path found in ${this@Unique} for property: $this")
 		}
 	}
 	
@@ -104,41 +167,43 @@ class Player(@JsonValue val id: PlayerId, val storage: PlayerStorageInterface) {
 		
 	}
 	
-	companion object {
-		private val attrs = Attrs("")
-		private val uniqueAttrs = Attrs.Unique("")
-	}
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 inline class PlayerId(val _id: Id<Player>)
 
 infix fun PlayerId?.storedIn(storage: PlayerStorageInterface) = this?.let { storage[it] }
-fun Id<Player>.toPlayerId() =
-		PlayerId(this)
+fun Id<Player>.toPlayerId() = PlayerId(this)
 
-fun String.asUsername() = Player.Name(this)
+
 
 sealed class MaybeAttribute<out T>(val path: String)
-
-fun <T> MaybeAttribute<T>?.unwrap(): T = when (this) {
-	is Attribute -> value
-	else                                                      -> throw AttributeException(
-			message = "Tried to unwrap non-existent attribute \"${this?.path}\""
-	)
-}
-
-fun <T> MaybeAttribute<T>?.orNull(): T? = when (this) {
-	is Attribute -> value
-	else                                                      -> null
-}
-
 data class Attribute<out T>(private val _path: String, val value: T) : MaybeAttribute<T>(_path)
 data class Undefined(private val _path: String) : MaybeAttribute<Nothing>(_path)
 
+inline fun <reified T> MaybeAttribute<T>?.unwrap(): T = when(this) {
+	is Attribute -> value
+	else         -> throw AttributeException("Tried to unwrap non-existent attribute \"${this?.path}\"")
+}
+
+inline fun <reified T> MaybeAttribute<T>?.orNull(): T? = when(this) {
+	is Attribute -> value
+	else         -> null
+}
+
 infix fun <T> String.stores(value: T) = Attribute(this, value)
-infix fun <T> KProperty<T>.stores(value: T) = name stores value
-val String.clear get() = Undefined(this)
+infix fun <T> KProperty<T>.stores(value: T) = path stores value
+val String.undefined get() = Undefined(this)
+
+val KAnnotatedElement?.path: String
+	get() = when(this) {
+        is KCallable<*> -> ((instanceParameter?: extensionReceiverParameter)?.type?.jvmErasure?.run {"$qualifiedName."}?: "") + name
+        is KClass<*>    -> qualifiedName?: simpleName?: ""
+		null            -> ""
+		else            -> this.toString().replace(" ", "_")
+	}
+
+
 
 data class InvalidUsernameException(val reason: String? = null, val input: Any? = null) : Exception("$reason: $input")
 
@@ -149,7 +214,7 @@ open class AttributeAssignmentException(id: PlayerId?,
 		when (attribute) {
 			is Attribute -> "Failed to set attribute \"${attribute.path}\" to ${attribute.value} for player ${id?._id}"
 			is Undefined -> "Failed to clear attribute \"${attribute.path}\" for player ${id?._id}"
-			else                                                      -> null
+			else         -> null
 		},
 		failure?.reason
 )

@@ -1,5 +1,6 @@
 dependencies {
-	implementation(project(":api:frontend"))
-	implementation(project(":credentials"))
-	implementation(project(":ttv"))
+	api(project(":credentials"))
+	api(project(":ttv"))
+	
+	
 }
