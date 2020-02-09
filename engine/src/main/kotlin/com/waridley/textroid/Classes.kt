@@ -1,6 +1,6 @@
 @file:Suppress("UNUSED")
 
-package com.waridley.textroid.engine.classes
+package com.waridley.textroid
 
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.memberProperties
@@ -11,10 +11,10 @@ abstract class Entity(description: String? = null) {
 	var fullName = this::class.qualifiedName
 	val contents
 		get() = this::class.memberProperties
-				        .map { it.name }
-				        .filter {
-					        !arrayOf("contents", "storage", "equals", "hashCode", "invoke", "toString").contains(it)
-				        } + this::class.nestedClasses.filter { it.objectInstance != null }.map { it.simpleName }
+				.map { it.name }
+				.filter {
+					!arrayOf("contents", "storage", "equals", "hashCode", "invoke", "toString").contains(it)
+				} + this::class.nestedClasses.filter { it.objectInstance != null }.map { it.simpleName }
 	
 	override fun toString() = name
 	val storage = object {
@@ -39,3 +39,5 @@ abstract class Planet(var size: Int = 0, description: String = "Size $size Plane
 	}
 	
 }
+
+class BankAccount private constructor(val currentAmount: Long)

@@ -46,16 +46,16 @@ fun createCollectionIfNotExists(db: MongoDatabase, collectionName: String) {
 
 tailrec fun Document.at(path: List<String>): Any? {
 	return when (path.size) {
-		1    -> {
-			get(path[0]).also { println(it) }
-		}
-		else -> (get(path[0]) as Document).at(path.slice(1 until path.size))
+		0    -> return null
+		1    -> get(path[0])
+		else -> (get(path[0])?.let { it as Document})?.at(path.slice(1 until path.size))
 	}
 }
 
 infix fun String.eq(other: Any?): Bson = Filters.eq(this, other)
 
-fun before(): FindOneAndUpdateOptions = FindOneAndUpdateOptions().returnDocument(ReturnDocument.BEFORE)
+fun before()  = FindOneAndUpdateOptions().returnDocument(ReturnDocument.BEFORE)
+fun after() = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
 
 infix fun String.containsAll(list: MutableList<*>): Bson {
 	return Filters.all(this, list)
