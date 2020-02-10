@@ -5,25 +5,24 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.prompt
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
+import com.github.philippheuer.events4j.api.domain.IEvent
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.pubsub.TwitchPubSub
 import com.mongodb.ConnectionString
 import com.mongodb.client.MongoDatabase
-import com.waridley.textroid.api.EVENT_MANAGER
-import com.waridley.textroid.api.PlayerStorageInterface
+import com.waridley.textroid.api.*
 import com.waridley.textroid.credentials.AuthenticationHelper
 import com.waridley.textroid.credentials.DesktopAuthController
 import com.waridley.textroid.mongo.credentials.MongoCredentialMap
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
-import com.waridley.textroid.mongo.game.MongoStorage
-import com.waridley.textroid.server.ActionResponder
-import com.waridley.textroid.server.ActionValidator
+import com.waridley.textroid.server.Server
 import com.waridley.textroid.ttv.TtvEventConverter
+import com.waridley.textroid.ttv.chat_client.TtvChatGameClient
 import com.waridley.textroid.ttv.monitor.ChannelPointsMonitor
 import org.litote.kmongo.KMongo
 import java.net.URI
 
-class MonitorLauncher : CliktCommand("ttvchannelmonitor") {
+class MongoLauncher : CliktCommand(name = "textroid") {
 	private val channelName by option(
 			"-c",
 			"--channel",
@@ -48,7 +47,6 @@ class MonitorLauncher : CliktCommand("ttvchannelmonitor") {
 	
 	var redirectPort: Int = 80
 	
-	var playerStorage: PlayerStorageInterface? = null
 	
 	override fun run() {
 		redirectPort = URI(redirectUrl).port
@@ -67,15 +65,16 @@ class MonitorLauncher : CliktCommand("ttvchannelmonitor") {
 				.withStorageBackend(MongoCredentialMap<String>(db))
 				.build()
 		credentialManager.registerIdentityProvider(idProvider)
-		playerStorage = MongoPlayerStorage(db, "test")
+		val playerStorage = MongoPlayerStorage(db)
 		val authHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
 		
 		ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER))
-		TtvEventConverter(playerStorage!!)
-		ActionValidator()
-		ActionResponder()
+		TtvChatGameClient(authHelper, channelName)
+		TtvEventConverter(playerStorage)
+		Server()
 		
+		on<IEvent> { LOG.trace("$this") }
 	}
 }
 
-fun main(args: Array<String>) = MonitorLauncher().main(args)
+fun main(args: Array<String>) = MongoLauncher().main(args)

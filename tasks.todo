@@ -1,0 +1,14 @@
+Sripting:
+☐ Via events @soon
+☐ Via command line @today
+☐ Via chat messages
+☐ Over socket?
+    - Alternatively, could send logs over socket and read scripts only from stdin
+
+
+Gameplay:
+
+
+Eventually:
+☐ Discord support
+☐ 

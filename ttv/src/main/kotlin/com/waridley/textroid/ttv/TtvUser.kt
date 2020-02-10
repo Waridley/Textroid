@@ -16,8 +16,3 @@ class TtvUser(@JsonValue override val id: TtvUserId, override val storage: TtvUs
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 inline class TtvUserId(override val _id: String): StorageId<TtvUser>
-
-var Player.ttvUser: TtvUser by storage<TtvUser>()
-var Player.ttvUserId: TtvUserId by uniqueStorage(TtvUser::id)
-var Player.helixUser: User by storage(TtvUser::helixUser)
-var Player.helixUserId: String by storage(TtvUser::helixUser / User::getId)

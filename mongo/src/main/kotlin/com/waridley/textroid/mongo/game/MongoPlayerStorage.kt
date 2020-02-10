@@ -51,7 +51,7 @@ class MongoPlayerStorage(db: MongoDatabase,
 	override fun findOrCreateOne(key: Attribute<*>, setOnInsert: List<Attribute<*>>): Player {
 		return col.findOneAndUpdate(
 				key.filter,
-				combine(setOnInsert.map { setOnInsert(it.path, it.value) } ),
+				combine(setOnInsert(key.update), combine(setOnInsert.map { setOnInsert(it.path, it.value) })),
 				findOneAndUpdateUpsert()
 		).let { it?.intoPlayer() ?: throw StorableCreationException(it) }
 	}

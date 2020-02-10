@@ -13,5 +13,4 @@ interface TtvUserStorage: StorageInterface<TtvUser, TtvUserId> {
 	fun getHelixUser(id: TtvUserId): User? =
 			helix.getUsers(credential.accessToken, listOf(id._id), null).execute().users.firstOrNull()
 	
-	
 }

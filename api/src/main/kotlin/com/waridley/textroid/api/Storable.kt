@@ -63,23 +63,50 @@ open class UniqueStorage<UT> @PublishedApi internal constructor(val path: String
 		}
 	}
 	
-	inline operator fun <reified S: UT> setValue(player: Storable<*, *>, property: KProperty<*>, value: S): S? {
-		return player.writeUnique(path stores value).orNull()
+	inline operator fun <reified S: UT> setValue(thisRef: Storable<*, *>, property: KProperty<*>, value: S): S? {
+		return thisRef.writeUnique(path stores value).orNull()
+	}
+	
+}
+
+open class ForeignStorage<FT: Storable<FT, I>, I: StorageId<FT>> @PublishedApi internal constructor(val path: String, val foreignStorage: StorageInterface<FT, I>) {
+	var init: (Storable<*, *>.() -> FT?)? = null
+	fun init(initializer: (Storable<*, *>.() -> FT?)?): ForeignStorage<FT, I> {
+		this.init = initializer; return this
+	}
+	
+	inline operator fun <reified G: FT> getValue(thisRef: Storable<*, *>, property: KProperty<*>): FT? {
+		val key = thisRef.readUnique<G>(path).orElse {
+			init?.let {
+				setValue(thisRef, property, thisRef.it() as G)
+			} ?: throw AttributeException("Couldn't read value for $property")
+		}.id
+		return foreignStorage[key] ?: throw AttributeException("Couldn't get $property from foreign storage $foreignStorage")
+	}
+	
+	inline operator fun <reified S: FT> setValue(thisRef: Storable<*, *>, property: KProperty<*>, value: S): S? {
+		return thisRef.writeUnique(path stores value).orNull()
 	}
 	
 }
 
 
-inline fun <reified A> storage(receiver: KCallable<A>) = Storage<A>(receiver.path)
-inline fun <reified B> storage(receiver: Class<B>) = Storage<B>(receiver.path)
-inline fun <reified C> storage() = storage(C::class.java)
-inline fun <reified D> storage(receiver: KCallable<D>, noinline initializer: Storable<*, *>.() -> D) =
-		Storage<D>(receiver.path).init(initializer)
+
+inline fun <reified T> storage(receiver: KCallable<T>) = Storage<T>(receiver.path)
+inline fun <reified T> storage(receiver: Class<T>) = Storage<T>(receiver.path)
+inline fun <reified T> storage() = storage(T::class.java)
+inline fun <reified T> storage(receiver: KCallable<T>, noinline initializer: Storable<*, *>.() -> T) =
+		Storage<T>(receiver.path).init(initializer)
 
 
 
-inline fun <reified UA> uniqueStorage(receiver: KCallable<UA>) = UniqueStorage<UA>(receiver.path)
-inline fun <reified UB> uniqueStorage(receiver: Class<UB>) = UniqueStorage<UB>(receiver.path)
-inline fun <reified UC> uniqueStorage() = uniqueStorage(UC::class.java)
-inline fun <reified UD> uniqueStorage(receiver: KCallable<UD>, noinline initializer: Storable<*, *>.() -> UD) =
-		UniqueStorage<UD>(receiver.path).init(initializer)
+inline fun <reified T> uniqueStorage(receiver: KCallable<T>) = UniqueStorage<T>(receiver.path)
+inline fun <reified T> uniqueStorage(receiver: Class<T>) = UniqueStorage<T>(receiver.path)
+inline fun <reified T> uniqueStorage() = uniqueStorage(T::class.java)
+inline fun <reified T> uniqueStorage(receiver: KCallable<T>, noinline initializer: Storable<*, *>.() -> T) =
+		UniqueStorage<T>(receiver.path).init(initializer)
+
+inline fun <reified T: Storable<T, I>, I: StorageId<T>> foreignKey(receiver: KCallable<T>, foreignStorage: StorageInterface<T, I>) =
+		ForeignStorage(receiver.path, foreignStorage)
+inline fun <reified T: Storable<T, I>, I: StorageId<T>> foreignKey(receiver: Class<T>, foreignStorage: StorageInterface<T, I>) =
+		ForeignStorage(receiver.path, foreignStorage)
