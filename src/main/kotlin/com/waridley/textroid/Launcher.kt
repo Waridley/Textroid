@@ -2,17 +2,16 @@ package com.waridley.textroid
 
 import com.github.twitch4j.helix.domain.User
 import com.mongodb.ConnectionString
-import com.waridley.textroid.api.Player
-import com.waridley.textroid.api.div
-import com.waridley.textroid.api.storage
+import com.waridley.textroid.api.*
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
+import com.waridley.textroid.mongo.game.MongoStorage
 import com.waridley.textroid.ttv.TtvUser
 import org.litote.kmongo.KMongo
 import kotlin.random.Random
 import kotlin.random.nextULong
 
 fun main(args: Array<String>) {
-	println(TtvUser::helixUser / User::getId)
+	println((TtvUser::helixUser / User::getId).path)
 }
 
 @ExperimentalUnsignedTypes

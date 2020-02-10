@@ -64,7 +64,7 @@ val <T> Class<T>.path
 		get() = (canonicalName ?: name ?: simpleName?: toString().replace(" ", "_")).replace("com.waridley.textroid.", "")
 
 
-inline operator fun <reified P, reified C> KProperty<P?>.div(other: KFunction1<P, C>) = other.syn
+inline operator fun <reified P, reified C> KProperty<P?>.div(other: KFunction1<P, C>) = PathNode(PathNode<Nothing?, P?>(this), other.syn)
 inline operator fun <reified P, reified C> KProperty<P?>.div(other: KProperty1<P, C>) = PathNode(PathNode<Nothing?, P?>(this), other)
 inline operator fun <reified P, reified C> KProperty<P?>.div(other: KProperty2<*, P, C>) = PathNode(PathNode<Nothing?, P?>(this), other)
 inline operator fun <reified P, reified C> PathNode<*, P>.div(other: KProperty1<P, C>) = PathNode(this, other)
@@ -104,8 +104,10 @@ inline val <reified R, reified T> KFunction1<R, T>.syn: KProperty1<R, T>
 	get() = SyntheticJavaProperty(R::class.java, this, T::class.java)
 
 @Suppress("UNCHECKED_CAST")
-@PublishedApi internal class SyntheticJavaProperty<R, T>(val receiver: Class<R>, val javaGetter: Function1<R, T>, type: Class<T>) : KProperty1<R, T> {
+@PublishedApi internal class SyntheticJavaProperty<R, T>(val receiver: Class<R>, javaGetter: Function1<R, T>, type: Class<T>) : KProperty1<R, T> {
 	val it = javaGetter as KCallable<*>
+	
+	override val name = it.name.replace("get", "").run { "${this[0]}${substring(1, length)}" }
 	
 	override val annotations: List<Annotation> get() = it.annotations
 	override val getter: KProperty1.Getter<R, T> get() = throw NotImplementedError()
@@ -115,7 +117,6 @@ inline val <reified R, reified T> KFunction1<R, T>.syn: KProperty1<R, T>
 	override val isLateinit: Boolean get() = throw NotImplementedError()
 	override val isOpen: Boolean get() = it.isOpen
 	override val isSuspend: Boolean get() = it.isSuspend
-	override val name: String = it.name.replace("get", "").replaceFirst(it.name[0], it.name[0].toLowerCase())
 	override val parameters: List<KParameter> get() = it.parameters
 	override val returnType: KType get() = it.returnType
 	override val typeParameters: List<KTypeParameter> get() = it.typeParameters

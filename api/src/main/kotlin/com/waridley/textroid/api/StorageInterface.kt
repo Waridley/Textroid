@@ -2,21 +2,33 @@ package com.waridley.textroid.api
 
 import kotlin.reflect.KProperty
 
-interface StorageInterface<C> {
-	operator fun get(id: StorageId<C>): C?
-	operator fun get(attribute: Attribute<*>): Iterable<C>
-	fun <T> readAttribute(id: StorageId<C>, path: String, type: Class<T>): MaybeAttribute<T>?
-	fun <T> readUnique(id: StorageId<C>, path: String, type: Class<T>): MaybeAttribute<T>?
-	fun <T> writeAttribute(id: StorageId<C>, attribute: MaybeAttribute<T>): MaybeAttribute<T?>?
-	fun <T> writeUnique(id: StorageId<C>, attribute: MaybeAttribute<T>): MaybeAttribute<T?>?
+interface StorageInterface<T, I: StorageId<T>> {
+	fun new(key: Attribute<*>): T
+	operator fun get(id: I): T?
+	operator fun get(attribute: MaybeAttribute<*>): Iterable<T>
+	fun <T> readAttribute(id: I, path: String, type: Class<T>): MaybeAttribute<T>?
+	fun <T> readUnique(id: I, path: String, type: Class<T>): MaybeAttribute<T>?
+	fun <T> writeAttribute(id: I, attribute: MaybeAttribute<T>): MaybeAttribute<T?>?
+	fun <T> writeUnique(id: I, attribute: MaybeAttribute<T>): MaybeAttribute<T?>?
+	
+	fun findOne(uniqueAttribute: Attribute<*>): T? =
+			get(uniqueAttribute).apply { if(count() > 1) throw StorableNotFoundException("Found ${count()} players, expected 1") }
+					.firstOrNull()
+	
+	fun findOrCreateOne(key: Attribute<*>, setOnInsert: List<Attribute<*>>): T
+	
+	
 }
 
 /** calls `readAttribute(id, property.name, T::class.java)` */
-inline fun <reified T, C> StorageInterface<C>.readAttribute(id: StorageId<C>, property: KProperty<T>): MaybeAttribute<T>? {
+inline fun <reified T, I: StorageId<T>> StorageInterface<T, I>.readAttribute(id: I, property: KProperty<T>): MaybeAttribute<T>? {
 	return readAttribute(id, property.name, T::class.java)
 }
 
 /** calls `readUnique(id, property.name, T::class.java)` */
-inline fun <reified T, C> StorageInterface<C>.readUnique(id: StorageId<C>, property: KProperty<T>): MaybeAttribute<T>? {
+inline fun <reified T, I: StorageId<T>> StorageInterface<T, I>.readUnique(id: I, property: KProperty<T>): MaybeAttribute<T>? {
 	return readUnique(id, property.name, T::class.java)
 }
+
+data class StorableCreationException(val reason: Any? = null, override val cause: Throwable? = null) : Exception(cause)
+data class StorableNotFoundException(val reason: Any? = null, override val cause: Throwable? = null) : Exception(cause)

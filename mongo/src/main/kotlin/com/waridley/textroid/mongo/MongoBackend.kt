@@ -1,71 +1,88 @@
-package com.waridley.textroid.mongo
+package com.waridley.textroid.mongo.game
 
-import com.mongodb.client.MongoCollection
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.FindOneAndUpdateOptions
-import com.mongodb.client.model.ReturnDocument
+import com.mongodb.client.model.Filters.exists
+import com.mongodb.client.model.IndexOptions
+import com.mongodb.client.model.Updates.setOnInsert
+import com.mongodb.client.result.UpdateResult
+import com.waridley.textroid.api.*
+import com.waridley.textroid.mongo.*
 import org.bson.Document
-import org.bson.conversions.Bson
+import org.litote.kmongo.*
 
-@Suppress("UNUSED")
-interface MongoBackend {
+open class MongoStorage<T, I: StorageId<T>>(db: MongoDatabase, collectionName: String = "players"): StorageInterface<T, I> {
 	
-	val db: MongoDatabase
+	private val col = db.getOrCreateCollection<Document>(collectionName).withKMongo()
 	
-	fun <T> getOrCreateCollection(collectionName: String, documentClass: Class<T>): MongoCollection<T> {
-		return getOrCreateCollection(db, collectionName, documentClass)
+	override fun new(key: Attribute<*>): T {
+		return col.findOneAndUpdate(
+				key.filter,
+				setOnInsert(key.path, key.value),
+				findOneAndUpdateUpsert()
+		).let { it?.intoT() ?: throw StorableCreationException(this) }
 	}
 	
-	fun getOrCreateCollection(collectionName: String) = getOrCreateCollection(collectionName, Document::class.java)
+	override operator fun get(id: I): T? {
+		return col.find(id.filter).projection(StorageId<T>::_id).first()?.intoT()
+	}
 	
-}
-
-fun <T> getOrCreateCollection(db: MongoDatabase, collectionName: String, documentClass: Class<T>): MongoCollection<T> {
-	createCollectionIfNotExists(db, collectionName)
-	return db.getCollection(collectionName, documentClass)
-}
-
-inline fun <reified T> MongoDatabase.getOrCreateCollection(collectionName: String): MongoCollection<T> {
-	createCollectionIfNotExists(this, collectionName)
-	return getCollection(collectionName, T::class.java)
-}
-
-fun createCollectionIfNotExists(db: MongoDatabase, collectionName: String) {
-	var collectionExists = false
-	for (name in db.listCollectionNames()) {
-		if (name == collectionName) {
-			collectionExists = true
-			break
+	override operator fun get(attribute: MaybeAttribute<*>): Iterable<T> {
+		return col.find(attribute.filter).map { it.intoT() }
+	}
+	
+	override fun findOrCreateOne(key: Attribute<*>, setOnInsert: List<Attribute<*>>): T {
+		return col.findOneAndUpdate(
+				key.filter,
+				combine(setOnInsert.map { setOnInsert(it.path, it.value) } ),
+				findOneAndUpdateUpsert()
+		).let { it?.intoT() ?: throw StorableCreationException(it) }
+	}
+	
+	
+	override fun <T> readAttribute(id: I, path: String, type: Class<T>): MaybeAttribute<T>? {
+		return col.find(id.filter)
+				.projection("{\"$path\":1}")
+				.first()?.run {
+					at(path.split("."))?.let { value ->
+						path stores JACKSON.convertValue(value, type)
+					} ?: path.undefined
+				}
+	}
+	
+	override fun <T> readUnique(id: I, path: String, type: Class<T>): MaybeAttribute<T>? {
+		ensureUnique(path)
+		return readAttribute(id, path, type)
+	}
+	
+	
+	override fun <T> writeAttribute(id: I, attribute: MaybeAttribute<T>): MaybeAttribute<T?>? {
+		return col.findOneAndUpdate(id.filter, attribute.update, after())?.let { doc ->
+			doc.at(attribute.path.split(".")).let { value ->
+				return when(value) {
+					null -> attribute.path.undefined
+					else -> attribute.path stores JACKSON.convertValue(value, object: TypeReference<T>() { })
+				}
+			}
 		}
 	}
-	if (!collectionExists) {
-		db.createCollection(collectionName)
+	
+	override fun <T> writeUnique(id: I, attribute: MaybeAttribute<T>): MaybeAttribute<T?>? {
+		ensureUnique(attribute.path)
+		return writeAttribute(id, attribute)
 	}
-}
-
-tailrec fun Document.at(path: List<String>): Any? {
-	return when (path.size) {
-		0    -> return null
-		1    -> get(path[0])
-		else -> (get(path[0])?.let { it as Document})?.at(path.slice(1 until path.size))
+	
+	private fun Any.intoT(): T {
+		return JACKSON.convertValue(this, object: TypeReference<T>() {})
 	}
-}
-
-infix fun String.eq(other: Any?): Bson = Filters.eq(this, other)
-
-fun before()  = FindOneAndUpdateOptions().returnDocument(ReturnDocument.BEFORE)
-fun after() = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-
-infix fun String.containsAll(list: MutableList<*>): Bson {
-	return Filters.all(this, list)
-}
-
-infix fun Bson?.andOr(other: Bson?): Bson? {
-	return when {
-		this == null && other == null -> null
-		this != null && other == null -> this
-		this == null && other != null -> other
-		else                          -> Filters.and(this, other)
+	
+	private fun ensureUnique(path: String, options: IndexOptions = IndexOptions()): String {
+		return col.ensureIndex("{\"$path\":1}", options.unique(true).partialFilterExpression(exists(path)))
 	}
+	
+	internal val StorageId<T>.filter get() = StorageId<T>::_id eq _id
+	
+	
 }
+
