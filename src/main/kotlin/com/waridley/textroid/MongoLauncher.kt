@@ -71,7 +71,7 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 		
 		MongoEventLogger(db)
 		ChannelPointsMonitor(cpAuthHelper, TwitchPubSub(EVENT_MANAGER))
-//		TtvChatGameClient(cpAuthHelper, channelName)
+//		TtvChatGameClient(cpAuthHelper, channelName) //TODO AuthenticationHelper closes after retrieval, but 2 can't bind to same port
 		TtvEventConverter(playerStorage)
 		Server()
 		
