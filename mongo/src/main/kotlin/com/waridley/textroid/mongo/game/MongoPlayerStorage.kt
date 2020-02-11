@@ -7,6 +7,7 @@ import com.mongodb.client.model.Updates.set
 import com.mongodb.client.model.Updates.unset
 import com.mongodb.client.model.Filters.exists
 import com.mongodb.client.model.IndexOptions
+import com.mongodb.client.model.ReturnDocument.AFTER
 import com.mongodb.client.model.Updates.setOnInsert
 import com.mongodb.client.result.UpdateResult
 import com.waridley.textroid.api.*
@@ -51,8 +52,8 @@ class MongoPlayerStorage(db: MongoDatabase,
 	override fun findOrCreateOne(key: Attribute<*>, setOnInsert: List<Attribute<*>>): Player {
 		return col.findOneAndUpdate(
 				key.filter,
-				combine(setOnInsert(key.update), combine(setOnInsert.map { setOnInsert(it.path, it.value) })),
-				findOneAndUpdateUpsert()
+				combine(setOnInsert.map { setOnInsert(it.path, it.value) } + setOnInsert(key.path, key.value)),
+				findOneAndUpdateUpsert().returnDocument(AFTER)
 		).let { it?.intoPlayer() ?: throw StorableCreationException(it) }
 	}
 	

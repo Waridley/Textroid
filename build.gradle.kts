@@ -57,6 +57,11 @@ allprojects {
 		implementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
 		implementation("org.junit.jupiter:junit-jupiter-engine:5.6.0")
 		implementation("org.projectlombok:lombok:1.18.10")
+		
+		//events4j-reactor dependencies
+		compile("io.projectreactor", "reactor-core", "3.3.2.RELEASE")
+		compile("io.projectreactor.addons", "reactor-extra", "3.3.2.RELEASE")
+		testCompile("io.projectreactor", "reactor-test", "3.3.2.RELEASE")
 	}
 }
 

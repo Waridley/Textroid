@@ -5,3 +5,6 @@
 [submodule "credential-manager"]
 	path = credential-manager
 	url = https://github.com/Waridley/credential-manager.git
+[submodule "events4j"]
+	path = events4j
+	url = https://github.com/Waridley/events4j.git

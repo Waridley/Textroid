@@ -35,5 +35,12 @@ includeBuild("twitch4j") {
 		substitute(module("com.github.twitch4j:twitch4j-rest-tmi")).with(project(":twitch4j-rest-tmi"))
 	}
 }
-include("ttv:event_handler")
-findProject(":ttv:event_handler")?.name = "event_handler"
+
+includeBuild("events4j") {
+	dependencySubstitution {
+		substitute(module("com.github.philippheuer.events4j:events4j-core")).with(project(":events4j-core"))
+		substitute(module("com.github.philippheuer.events4j:events4j-handler-simple")).with(project(":events4j-handler-simple"))
+		substitute(module("com.github.philippheuer.events4j:events4j-handler-reactor")).with(project(":events4j-handler-reactor"))
+		
+	}
+}

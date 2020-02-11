@@ -12,11 +12,9 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.util.*
 
-class AuthenticationHelper(
-		val identityProvider: OAuth2IdentityProvider,
-		private val redirectUrl: String? = null,
-		redirectPort: Int? = null
-) {
+class AuthenticationHelper(val identityProvider: OAuth2IdentityProvider,
+                           private val redirectUrl: String? = null,
+                           redirectPort: Int? = null) {
 
 	private val credentialManager = identityProvider.credentialManager
 	@Suppress("UNCHECKED_CAST")
@@ -32,11 +30,10 @@ class AuthenticationHelper(
 		s
 	}
 
-	fun retrieveCredential(
-			credName: String,
-			scopes: List<Any> = listOf(),
-			infoPageHandler: (e: HttpExchange) -> Unit = ::handleInfoPage,
-			onRetrieved: (c: OAuth2Credential) -> Unit) {
+	fun retrieveCredential(credName: String,
+	                       scopes: List<Any> = listOf(),
+	                       infoPageHandler: (e: HttpExchange) -> Unit = ::handleInfoPage,
+	                       onRetrieved: (c: OAuth2Credential) -> Unit) {
 
 		credentialStorage[credName]
 				?.let { it as OAuth2Credential }
@@ -64,11 +61,10 @@ class AuthenticationHelper(
 		}
 	}
 
-	private fun retrieveNewCredential(
-			credName: String,
-			onRetrieved: (c: OAuth2Credential) -> Any?,
-			infoPageHandler: (e: HttpExchange) -> Any? = this::handleInfoPage,
-			scopes: List<Any> = listOf()) {
+	private fun retrieveNewCredential(credName: String,
+	                                  onRetrieved: (c: OAuth2Credential) -> Any?,
+	                                  infoPageHandler: (e: HttpExchange) -> Any? = this::handleInfoPage,
+	                                  scopes: List<Any> = listOf()) {
 		
 		server.createContext(redirectUri.path.let {
 			when {

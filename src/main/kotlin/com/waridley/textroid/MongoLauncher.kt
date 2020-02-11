@@ -13,6 +13,7 @@ import com.mongodb.client.MongoDatabase
 import com.waridley.textroid.api.*
 import com.waridley.textroid.credentials.AuthenticationHelper
 import com.waridley.textroid.credentials.DesktopAuthController
+import com.waridley.textroid.mongo.MongoEventLogger
 import com.waridley.textroid.mongo.credentials.MongoCredentialMap
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
 import com.waridley.textroid.server.Server
@@ -66,10 +67,11 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 				.build()
 		credentialManager.registerIdentityProvider(idProvider)
 		val playerStorage = MongoPlayerStorage(db)
-		val authHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
+		val cpAuthHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
 		
-		ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER))
-		TtvChatGameClient(authHelper, channelName)
+		MongoEventLogger(db)
+		ChannelPointsMonitor(cpAuthHelper, TwitchPubSub(EVENT_MANAGER))
+//		TtvChatGameClient(cpAuthHelper, channelName)
 		TtvEventConverter(playerStorage)
 		Server()
 		
