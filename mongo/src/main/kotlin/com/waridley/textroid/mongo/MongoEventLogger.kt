@@ -3,7 +3,7 @@ package com.waridley.textroid.mongo
 import com.github.philippheuer.events4j.core.domain.Event
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.InsertOneOptions
-import com.waridley.textroid.api.TextroidEvent
+import com.waridley.textroid.ChatCommandEvent
 import com.waridley.textroid.api.TextroidEventHandler
 import org.litote.kmongo.withKMongo
 
@@ -12,7 +12,7 @@ class MongoEventLogger(db: MongoDatabase, collectionName: String = "events"): Te
 	val col = db.getOrCreateCollection<EventLogEntry>(collectionName).withKMongo()
 	
 	init {
-		on<TextroidEvent> {
+		on<ChatCommandEvent> {
 			col.insertOne(EventLogEntry(this.javaClass.simpleName, this), InsertOneOptions())
 		}
 	}

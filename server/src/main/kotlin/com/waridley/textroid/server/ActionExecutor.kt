@@ -11,4 +11,9 @@ object ActionExecutor {
 		player.currencyInBankAccount += amount
 	}
 	
+	fun readCurrency(player: Player): Long {
+		return player.currencyInBankAccount
+	}
+	
+	
 }
