@@ -5,7 +5,6 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.prompt
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
-import com.github.philippheuer.events4j.api.domain.IEvent
 import com.github.philippheuer.events4j.core.domain.Event
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.pubsub.TwitchPubSub
@@ -18,7 +17,7 @@ import com.waridley.textroid.mongo.MongoEventLogger
 import com.waridley.textroid.mongo.credentials.MongoCredentialMap
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
 import com.waridley.textroid.server.Server
-import com.waridley.textroid.ttv.TtvEventConverter
+import com.waridley.textroid.ttv.monitor.TtvEventConverter
 import com.waridley.textroid.ttv.chat_client.TtvChatGameClient
 import com.waridley.textroid.ttv.monitor.ChannelPointsMonitor
 import org.litote.kmongo.KMongo
@@ -46,6 +45,11 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 			"--connection-string",
 			help = "Your MongoDB connection string"
 	).prompt("MongoDB connection string")
+	private val commandsScriptFilePath by option(
+			"-f",
+			"--commands-script-path",
+			help = "The path to the script file for commands"
+	).default("server/src/main/resources/Commands.kts")
 	
 	var redirectPort: Int = 80
 	
@@ -70,11 +74,13 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 		val playerStorage = MongoPlayerStorage(db)
 		val authHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
 		
-		MongoEventLogger(db)
-		ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER))
-		TtvChatGameClient(authHelper, channelName)
-		TtvEventConverter(playerStorage)
-		Server()
+		Services (
+			MongoEventLogger(db),
+			ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER)),
+			TtvChatGameClient(authHelper, channelName),
+			TtvEventConverter(playerStorage),
+			Server(commandsScriptFilePath)
+		)
 		
 		on<Event> { LOG.trace("$this") }
 	}

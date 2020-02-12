@@ -7,3 +7,5 @@ import com.waridley.textroid.api.TextroidEvent
 sealed class ActionApprovedEvent: TextroidEvent()
 
 data class MintApprovedEvent(val player: Player, val amount: Long, val request: IEvent): ActionApprovedEvent()
+
+data class CommandApprovedEvent(val commandEvent: ChatCommandEvent): ActionApprovedEvent()

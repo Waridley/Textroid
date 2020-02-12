@@ -12,10 +12,12 @@ class ChannelPointsMonitor(
 	var sub: PubSubSubscription? = null
 	
 	init {
-		authHelper.retrieveCredential("TtvChannelMonitorCredential", listOf("channel:read:redemptions")) {
-			println("Requesting Channel Points PubSub subscription")
-			sub = pubsub.listenForChannelPointsRedemptionEvents(it, it.userId)
-		}
+		Thread {
+			authHelper.retrieveCredential("TtvChannelMonitorCredential", listOf("channel:read:redemptions")) {
+				println("Requesting Channel Points PubSub subscription")
+				sub = pubsub.listenForChannelPointsRedemptionEvents(it, it.userId)
+			}
+		}.start()
 	}
 	
 	override fun close() {

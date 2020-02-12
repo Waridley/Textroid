@@ -29,7 +29,7 @@ class AuthenticationHelper(val identityProvider: OAuth2IdentityProvider,
 		s.start()
 		s
 	}
-
+	
 	fun retrieveCredential(credName: String,
 	                       scopes: List<Any> = listOf(),
 	                       infoPageHandler: (e: HttpExchange) -> Unit = ::handleInfoPage,

@@ -3,10 +3,18 @@ Features:
         ☐ Via events @soon
         ☐ Via command line @today
         ✔ Via chat messages @done (2/12/2020, 4:13:41 AM)
-            ☐ Move handling to ActionResponder and validate permissions before publishing ChatCommandEvent
+            ✔ Move handling to ActionResponder @done (2/12/2020, 1:52:12 PM)
+            ☐ Validate permissions before publishing CommandApprovedEvent
         ☐ Over socket?
             - Alternatively, could send logs over socket and read scripts only from stdin
         ☐ Make file paths a command-line option
+    
+    Other channel rewards:
+        ☐ Cheers
+        ☐ Subscriptions
+        ☐ Watching from host
+        ☐ Watching guest
+        ☐ Chatting
 
     Eventually:
         ☐ Discord support

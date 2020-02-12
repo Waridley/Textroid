@@ -7,11 +7,18 @@ import com.github.philippheuer.events4j.reactor.ReactorEventHandler
 import reactor.core.Disposable
 import java.io.Closeable
 
-abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAGER): Closeable {
+abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAGER, config: (TextroidEventHandler.() -> Unit)? = null): Closeable {
+	
 	@PublishedApi internal val handler: ReactorEventHandler = eventManager.getEventHandler(ReactorEventHandler::class.java)
 	
-	inline fun <reified T: IEvent> on(crossinline consumer: T.() -> Unit) {
-		subs.add(handler.onEvent(T::class.java) {
+	constructor(config: TextroidEventHandler.() -> Unit): this(EVENT_MANAGER, config)
+	
+	init  {
+		config?.let { Thread { it() }.start() }
+	}
+	
+	inline fun <reified T: IEvent> on(crossinline consumer: T.() -> Unit): Disposable? {
+		return handler.onEvent(T::class.java) {
 			it.run {
 				try {
 					consumer()
@@ -19,7 +26,7 @@ abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAG
 					e.printStackTrace()
 				}
 			}
-		})
+		}.also { subs.add(it) }
 	}
 	
 	fun publish(event: IEvent) = eventManager.publish(event)

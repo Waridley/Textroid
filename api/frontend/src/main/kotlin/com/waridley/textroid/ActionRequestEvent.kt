@@ -13,7 +13,7 @@ data class MintRequestEvent(val player: Player, val amount: Long, val source: IE
 sealed class InfoRequestEvent: ActionRequestEvent() {
 	data class CurrencyInBank(
 			val player: Player,
-			@JsonIgnore val responseHandler: (response: String) -> Unit,
+			@JsonIgnore val respond: (response: String) -> Unit,
 			val source: IEvent
 	): InfoRequestEvent()
 }
@@ -22,7 +22,7 @@ data class ChatCommandEvent(
 		val player: Player,
 		val command: String,
 		val args: String,
-		@JsonIgnore val responseHandler: (response: String) -> Unit,
+		@JsonIgnore val respond: (response: String) -> Unit,
 		val source: IEvent
 ): ActionRequestEvent()
 
