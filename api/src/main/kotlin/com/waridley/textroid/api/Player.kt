@@ -50,4 +50,6 @@ inline class PlayerId(override val _id: Id<Player>): StorageId<Player>
 infix fun PlayerId?.storedIn(storage: PlayerStorageInterface) = this?.let { storage[it] }
 fun Id<Player>.toPlayerId() = PlayerId(this)
 
+val String.asPlayerName get() = Player.Name(this)
+
 data class InvalidUsernameException(val reason: String? = null, val input: Any? = null): Exception("$reason: $input")

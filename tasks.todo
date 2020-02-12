@@ -2,7 +2,8 @@ Features:
     Sripting:
         ☐ Via events @soon
         ☐ Via command line @today
-        ☐ Via chat messages
+        ✔ Via chat messages @done (2/12/2020, 4:13:41 AM)
+            ☐ Move handling to ActionResponder and validate permissions before publishing ChatCommandEvent
         ☐ Over socket?
             - Alternatively, could send logs over socket and read scripts only from stdin
 

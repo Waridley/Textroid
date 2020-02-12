@@ -30,19 +30,3 @@ fun setNickname() = Response {
 		"Failed to set your nickname: ${e.message}"
 	}
 }
-
-fun addCommand() = Response {
-	val separator = args.indexOf(" ")
-	val commandName = args.substring(0, separator)
-	val body = args.substring(separator + 1)
-	File("server/src/main/resources/Commands.kts").run {
-		appendText("""
-			
-			
-			fun $commandName() = Command {
-				$body
-			}
-		""".trimIndent())
-	}
-	"Added command %$commandName"
-}
