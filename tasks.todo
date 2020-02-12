@@ -1,13 +1,12 @@
 Features:
     Sripting:
-        ☐ Via events @soon
         ☐ Via command line @today
         ✔ Via chat messages @done (2/12/2020, 4:13:41 AM)
             ✔ Move handling to ActionResponder @done (2/12/2020, 1:52:12 PM)
             ☐ Validate permissions before publishing CommandApprovedEvent
         ☐ Over socket?
             - Alternatively, could send logs over socket and read scripts only from stdin
-        ☐ Make file paths a command-line option
+        ✔ Make file paths a command-line option @done (2/12/2020, 4:29:42 PM)
     
     Other channel rewards:
         ☐ Cheers
@@ -23,5 +22,3 @@ Improvements:
     ☐ Validate channel points redemptions
         ✔ Log all actions to MongoDB @done (2/11/2020, 4:01:13 AM)
         ☐ Check that redemption ID hasn't already been logged
-    ✔ Fix AuthenticationHelper to be able to handle multiple different credential retrievals @done (2/11/2020, 7:08:37 PM)
-        - Already worked, I was just dumb and forgot to add scopes...

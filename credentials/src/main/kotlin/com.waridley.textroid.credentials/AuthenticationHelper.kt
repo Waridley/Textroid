@@ -13,8 +13,7 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 class AuthenticationHelper(val identityProvider: OAuth2IdentityProvider,
-                           private val redirectUrl: String? = null,
-                           redirectPort: Int? = null) {
+                           private val redirectUrl: String? = null) {
 
 	private val credentialManager = identityProvider.credentialManager
 	@Suppress("UNCHECKED_CAST")
@@ -22,7 +21,7 @@ class AuthenticationHelper(val identityProvider: OAuth2IdentityProvider,
 	private val authController = credentialManager.authenticationController as DesktopAuthController
 
 	private val redirectUri by lazy { redirectUrl?.let { URI(redirectUrl) } ?: URI("http://localhost") }
-	private val port by lazy { redirectPort ?: redirectUri.port }
+	private val port = redirectUri.port
 
 	private val server: HttpServer by lazy {
 		val s = HttpServer.create(InetSocketAddress(this.port), 0)

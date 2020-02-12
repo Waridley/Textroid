@@ -51,20 +51,16 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 			help = "The path to the script file for commands"
 	).default("server/src/main/resources/Commands.kts")
 	
-	var redirectPort: Int = 80
-	
 	
 	override fun run() {
-		redirectPort = URI(redirectUrl).port
-		
 		val db = KMongo.createClient(
 				connectionString = ConnectionString(dbConnStr)
 		).getDatabase("chatgame")
 		
-		startMonitors(db)
+		startServices(db)
 	}
 	
-	fun startMonitors(db: MongoDatabase) {
+	fun startServices(db: MongoDatabase) {
 		val idProvider = TwitchIdentityProvider(clientId, clientSecret, redirectUrl)
 		val credentialManager = CredentialManagerBuilder.builder()
 				.withAuthenticationController(DesktopAuthController("$redirectUrl/info.html"))
@@ -72,7 +68,7 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 				.build()
 		credentialManager.registerIdentityProvider(idProvider)
 		val playerStorage = MongoPlayerStorage(db)
-		val authHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
+		val authHelper = AuthenticationHelper(idProvider, redirectUrl)
 		
 		Services (
 			MongoEventLogger(db),
