@@ -22,4 +22,4 @@ val CURRENCY_SYMBOL = '⌬'
 
 object GlobalEventHandler: TextroidEventHandler()
 
-inline fun <reified T: IEvent> on(crossinline consumer: T.() -> Unit) = GlobalEventHandler.on(consumer)
+inline fun <reified T: Event> on(crossinline consumer: T.() -> Unit) = GlobalEventHandler.on(consumer)

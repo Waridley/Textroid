@@ -6,6 +6,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.prompt
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
 import com.github.philippheuer.events4j.api.domain.IEvent
+import com.github.philippheuer.events4j.core.domain.Event
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.pubsub.TwitchPubSub
 import com.mongodb.ConnectionString
@@ -67,15 +68,15 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 				.build()
 		credentialManager.registerIdentityProvider(idProvider)
 		val playerStorage = MongoPlayerStorage(db)
-		val cpAuthHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
+		val authHelper = AuthenticationHelper(idProvider, redirectUrl, redirectPort)
 		
 		MongoEventLogger(db)
-		ChannelPointsMonitor(cpAuthHelper, TwitchPubSub(EVENT_MANAGER))
-//		TtvChatGameClient(cpAuthHelper, channelName) //TODO AuthenticationHelper closes after retrieval, but 2 can't bind to same port
+		ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER))
+		TtvChatGameClient(authHelper, channelName)
 		TtvEventConverter(playerStorage)
 		Server()
 		
-		on<IEvent> { LOG.trace("$this") }
+		on<Event> { LOG.trace("$this") }
 	}
 }
 

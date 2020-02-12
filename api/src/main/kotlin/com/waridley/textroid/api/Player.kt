@@ -33,7 +33,7 @@ class Player(@JsonValue override val id: PlayerId, override val storage: PlayerS
 					matches("^\\s+.+".toRegex()) -> err("Starts with whitespace")
 					matches(".+\\s+$".toRegex()) -> err("Ends with whitespace")
 					length > 50                  -> err("Too long")
-					else                         -> println("Accepting player name: $this | Don't forget to add more rules!")
+					else                         -> LOG.trace("Accepting player name: $this | Don't forget to add more rules!")
 				}
 			}
 		}

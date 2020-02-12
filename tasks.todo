@@ -13,4 +13,5 @@ Improvements:
     ☐ Validate channel points redemptions
         ✔ Log all actions to MongoDB @done (2/11/2020, 4:01:13 AM)
         ☐ Check that redemption ID hasn't already been logged
-    ☐ Fix AuthenticationHelper to be able to handle multiple different credential retrievals
+    ✔ Fix AuthenticationHelper to be able to handle multiple different credential retrievals @done (2/11/2020, 7:08:37 PM)
+        - Already worked, I was just dumb and forgot to add scopes...

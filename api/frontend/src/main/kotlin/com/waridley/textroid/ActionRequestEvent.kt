@@ -3,8 +3,9 @@ package com.waridley.textroid
 import com.github.philippheuer.events4j.api.domain.IEvent
 import com.github.philippheuer.events4j.core.domain.Event
 import com.waridley.textroid.api.Player
+import com.waridley.textroid.api.TextroidEvent
 
-sealed class ActionRequestEvent: Event()
+sealed class ActionRequestEvent: TextroidEvent()
 
 data class MintRequestEvent(val player: Player, val amount: Long, val source: IEvent): ActionRequestEvent()
 
