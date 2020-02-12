@@ -3,6 +3,7 @@ package com.waridley.textroid.server
 import com.waridley.textroid.*
 import com.waridley.textroid.api.*
 import java.io.File
+import javax.script.Invocable
 import javax.script.ScriptContext
 import javax.script.ScriptEngineManager
 import javax.script.SimpleScriptContext
@@ -13,11 +14,13 @@ class ActionValidator: TextroidEventHandler() {
 	
 	private val commandsScript get() = File("server/src/main/resources/Commands.kts").readText() + "\nthis"
 	
-	var chatCommands: Any? = null
+	var chatCommands: List<String> = emptyList()
 	fun reloadCommands(): Boolean {
 		return try {
 			engine.context = SimpleScriptContext().also { it.setBindings(engine.createBindings(), ScriptContext.ENGINE_SCOPE) }
-			chatCommands = engine.eval(commandsScript)
+			chatCommands = engine.eval(commandsScript)?.javaClass?.declaredMethods?.map { it.name }?.filter {
+				!listOf("equals", "hashCode", "toString", "main").contains(it) && !it.contains("$")
+			} ?: emptyList()
 			true
 		} catch (e: Exception) {
 			e.printStackTrace()
@@ -28,25 +31,21 @@ class ActionValidator: TextroidEventHandler() {
 	val commandStates = mutableMapOf<String, StringBuilder>()
 	
 	init {
-		chatCommands = engine.eval(commandsScript)
+		reloadCommands()
 		on<MintRequestEvent> {
 			LOG.info("Pretending to validate $this")
 			publish(MintApprovedEvent(player, amount, this))
 		}
 		on<ChatCommandEvent> {
 			when(command.toLowerCase()) {
-				"commands"             -> {
-					responseHandler("Available commands: ${
-					chatCommands?.javaClass?.declaredMethods?.map { it.name }?.filter {
-						!listOf("equals", "hashCode", "toString", "main").contains(it) && !it.contains("$")
-					}?.joinToString()
-					}")
+				"commands" -> {
+					responseHandler("Available commands: ${chatCommands.joinToString()}")
 				}
-				"reload"               -> responseHandler(
+				"reload", "reloadcommands" -> responseHandler(
 						if(reloadCommands()) "Reloaded command script."
 						else "Failed to load commands. You may need to fix the script file."
 				)
-				"addcom", "addtrigger" -> if(player.username == "waridley".asPlayerName) command.let {
+				"addcommand", "addcom", "addtrigger" -> if(player.username == "waridley".asPlayerName) command.let {
 					val separator = args.indexOf(" ")
 					val commandName = args.substring(0, separator)
 					val body = args.substring(separator + 1)
@@ -77,9 +76,13 @@ class ActionValidator: TextroidEventHandler() {
 					
 				}
 				else -> {
-					when(val consumer = chatCommands?.javaClass?.getDeclaredMethod(command)?.invoke(chatCommands)) {
+					when(val consumer = (engine as Invocable).invokeFunction(command)) {
 						is Response -> responseHandler("${consumer(this)}")
 						is Trigger  -> publish(consumer(this))
+						else        -> {
+							LOG.error("$consumer")
+							responseHandler("Oops, something went wrong! @Waridley, check the script file.")
+						}
 					}
 				}
 			}

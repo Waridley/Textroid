@@ -18,7 +18,7 @@ val LOG: Logger = LoggerFactory.getLogger(Global::class.java)
 
 val JACKSON = ObjectMapper()
 
-val CURRENCY_SYMBOL = '⌬'
+const val CURRENCY_SYMBOL = '⌬'
 
 object GlobalEventHandler: TextroidEventHandler()
 

@@ -6,6 +6,7 @@ Features:
             ☐ Move handling to ActionResponder and validate permissions before publishing ChatCommandEvent
         ☐ Over socket?
             - Alternatively, could send logs over socket and read scripts only from stdin
+        ☐ Make file paths a command-line option
 
     Eventually:
         ☐ Discord support
