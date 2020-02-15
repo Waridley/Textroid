@@ -23,7 +23,6 @@ object ActionExecutor {
 		return player.currencyInBankAccount
 	}
 	
-	
 }
 
 class ScriptExecutor(commandsScriptFilePath: String = "server/src/main/resources/Commands.kts", val eventManager: EventManager) {

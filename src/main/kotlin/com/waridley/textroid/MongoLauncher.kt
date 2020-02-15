@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.prompt
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
+import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.philippheuer.events4j.core.domain.Event
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.pubsub.TwitchPubSub
@@ -13,15 +14,17 @@ import com.mongodb.client.MongoDatabase
 import com.waridley.textroid.api.*
 import com.waridley.textroid.credentials.AuthenticationHelper
 import com.waridley.textroid.credentials.DesktopAuthController
+import com.waridley.textroid.credentials.orNull
 import com.waridley.textroid.mongo.MongoEventLogger
 import com.waridley.textroid.mongo.credentials.MongoCredentialMap
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
+import com.waridley.textroid.mongo.ttv.MongoTtvUserStorage
 import com.waridley.textroid.server.Server
 import com.waridley.textroid.ttv.monitor.TtvEventConverter
 import com.waridley.textroid.ttv.chat_client.TtvChatGameClient
 import com.waridley.textroid.ttv.monitor.ChannelPointsMonitor
+import com.waridley.textroid.ttv.monitor.WatchtimeMonitor
 import org.litote.kmongo.KMongo
-import java.net.URI
 
 class MongoLauncher : CliktCommand(name = "textroid") {
 	private val channelName by option(
@@ -53,6 +56,8 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 	
 	
 	override fun run() {
+		on<Event> { LOG.trace("$this") }
+		
 		val db = KMongo.createClient(
 				connectionString = ConnectionString(dbConnStr)
 		).getDatabase("chatgame")
@@ -62,23 +67,30 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 	
 	fun startServices(db: MongoDatabase) {
 		val idProvider = TwitchIdentityProvider(clientId, clientSecret, redirectUrl)
+		val credStorage = MongoCredentialMap<String>(db)
 		val credentialManager = CredentialManagerBuilder.builder()
 				.withAuthenticationController(DesktopAuthController("$redirectUrl/info.html"))
-				.withStorageBackend(MongoCredentialMap<String>(db))
+				.withStorageBackend(credStorage)
 				.build()
 		credentialManager.registerIdentityProvider(idProvider)
 		val playerStorage = MongoPlayerStorage(db)
 		val authHelper = AuthenticationHelper(idProvider, redirectUrl)
+		val appCredential = (credStorage["TextroidAppAccessToken"] as OAuth2Credential?)
+				            ?: idProvider.appAccessToken.let { cred ->
+			                    (idProvider.getAdditionalCredentialInformation(cred).orNull() ?: cred)
+					                    .also { credStorage["TextroidAppAccessToken"] = it }
+		                    }
+		
+		val ttvUserStorage = MongoTtvUserStorage(db, credential = appCredential)
 		
 		Services (
-			MongoEventLogger(db),
-			ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER)),
-			TtvChatGameClient(authHelper, channelName),
-			TtvEventConverter(playerStorage),
-			Server(commandsScriptFilePath)
+				MongoEventLogger(db),
+				ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER)),
+				WatchtimeMonitor(channelName, 1L, credential = appCredential),
+				TtvChatGameClient(authHelper, channelName),
+				TtvEventConverter(playerStorage, ttvUserStorage),
+				Server(commandsScriptFilePath)
 		)
-		
-		on<Event> { LOG.trace("$this") }
 	}
 }
 

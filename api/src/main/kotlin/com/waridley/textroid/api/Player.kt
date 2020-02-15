@@ -5,16 +5,13 @@ import com.fasterxml.jackson.annotation.JsonValue
 import org.litote.kmongo.Id
 
 @Suppress("UNUSED")
-class Player(@JsonValue override val id: PlayerId, override val storage: PlayerStorageInterface): Storable<Player, PlayerId>(id, storage) {
+class Player(@JsonValue override val id: PlayerId, override val storage: PlayerStorageInterface): Storable<Player, PlayerId, PlayerStorageInterface>(id, storage, Player::class.java) {
 	
 	var username: Name by uniqueStorage(::username)
 	
 	var nickname: Name
-		get() = readAttribute<Name>("nickname").orNull() ?: username
-		set(value) { this["nickname"] = value }
-	
-	
-	override fun toString() = id.toString()
+		get() = readAttribute<Name>(::nickname.path).orNull() ?: username
+		set(value) { this[::nickname.path] = value }
 	
 	
 	data class Name(@JsonValue val value: String) {
@@ -42,12 +39,16 @@ class Player(@JsonValue override val id: PlayerId, override val storage: PlayerS
 			return value
 		}
 	}
+	
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-inline class PlayerId(override val _id: Id<Player>): StorageId<Player>
+inline class PlayerId(override val _id: Id<Player>): StorageId<Player, PlayerId, PlayerStorageInterface, Id<Player>> {
+	override fun storedIn(storage: PlayerStorageInterface): Player {
+		return Player(this, storage)
+	}
+}
 
-infix fun PlayerId?.storedIn(storage: PlayerStorageInterface) = this?.let { storage[it] }
 fun Id<Player>.toPlayerId() = PlayerId(this)
 
 val String.asPlayerName get() = Player.Name(this)

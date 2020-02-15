@@ -9,15 +9,17 @@ import javax.script.ScriptContext
 import javax.script.ScriptEngineManager
 import javax.script.SimpleScriptContext
 
-class ActionValidator: TextroidEventHandler({
-	
-	on<MintRequestEvent> {
-		LOG.info("Pretending to validate $this")
-		publish(MintApprovedEvent(player, amount, this))
-	}
-	on<ChatCommandEvent> {
-		//TODO validate command permissions
-		publish(CommandApprovedEvent(this))
-	}
-	
-})
+class ActionValidator: TextroidEventHandler(
+		{
+			
+			on<MintRequestEvent> {
+				LOG.info("Pretending to validate $this")
+				publish(MintApprovedEvent(player, amount, this))
+			}
+			on<ChatCommandEvent> {
+				//TODO validate command permissions
+				publish(CommandApprovedEvent(this))
+			}
+			
+		}
+)

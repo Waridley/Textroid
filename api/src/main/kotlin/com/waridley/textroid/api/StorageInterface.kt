@@ -2,7 +2,7 @@ package com.waridley.textroid.api
 
 import kotlin.reflect.KProperty
 
-interface StorageInterface<T, I: StorageId<T>> {
+interface StorageInterface<T: Storable<T, I, *>, I: StorageId<T, I, *, *>> {
 	fun new(key: Attribute<*>): T
 	operator fun get(id: I): T?
 	operator fun get(attribute: MaybeAttribute<*>): Iterable<T>
@@ -20,14 +20,12 @@ interface StorageInterface<T, I: StorageId<T>> {
 	
 }
 
-/** calls `readAttribute(id, property.name, T::class.java)` */
-inline fun <reified T, I: StorageId<T>> StorageInterface<T, I>.readAttribute(id: I, property: KProperty<T>): MaybeAttribute<T>? {
-	return readAttribute(id, property.name, T::class.java)
+inline fun <reified R: Storable<R, I, *>, reified T, I: StorageId<R, I, *, *>> StorageInterface<R, I>.readAttribute(id: I, property: KProperty<T>): MaybeAttribute<T>? {
+	return readAttribute(id, property.path.relativeTo<R>(), T::class.java)
 }
 
-/** calls `readUnique(id, property.name, T::class.java)` */
-inline fun <reified T, I: StorageId<T>> StorageInterface<T, I>.readUnique(id: I, property: KProperty<T>): MaybeAttribute<T>? {
-	return readUnique(id, property.name, T::class.java)
+inline fun <reified R: Storable<R, I, *>, reified T, I: StorageId<R, I, *, *>> StorageInterface<R, I>.readUnique(id: I, property: KProperty<T>): MaybeAttribute<T>? {
+	return readUnique(id, property.path.relativeTo<R>(), T::class.java)
 }
 
 data class StorableCreationException(val reason: Any? = null, override val cause: Throwable? = null) : Exception(cause)

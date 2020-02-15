@@ -12,18 +12,22 @@ import javax.script.ScriptContext
 import javax.script.ScriptEngineManager
 import javax.script.SimpleScriptContext
 
-class ActionResponder(commandsScriptFilePath: String = "server/src/main/resources/Commands.kts", eventManager: EventManager = EVENT_MANAGER): TextroidEventHandler(eventManager, {
-	
-	val scriptExecutor = ScriptExecutor(commandsScriptFilePath, eventManager)
-	
-	on<MintApprovedEvent> {
-		ActionExecutor.adjustCurrency(player, amount)
-	}
-	on<InfoRequestEvent.CurrencyInBank> {
-		respond("${ActionExecutor.readCurrency(player)}")
-	}
-	on<CommandApprovedEvent> {
-		scriptExecutor.handle(commandEvent)
-	}
-	
-})
+class ActionResponder(
+		commandsScriptFilePath: String = "server/src/main/resources/Commands.kts",
+		eventManager: EventManager = EVENT_MANAGER
+): TextroidEventHandler(
+		eventManager,
+		{
+			val scriptExecutor = ScriptExecutor(commandsScriptFilePath, eventManager)
+			
+			on<MintApprovedEvent> {
+				ActionExecutor.adjustCurrency(player, amount)
+			}
+			on<InfoRequestEvent.CurrencyInBank> {
+				respond("${ActionExecutor.readCurrency(player)}")
+			}
+			on<CommandApprovedEvent> {
+				scriptExecutor.handle(commandEvent)
+			}
+		}
+)

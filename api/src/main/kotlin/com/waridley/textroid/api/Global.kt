@@ -8,14 +8,14 @@ import com.github.philippheuer.events4j.core.domain.Event
 import com.github.philippheuer.events4j.reactor.ReactorEventHandler
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.Closeable
-import java.util.function.Consumer
+import reactor.core.Disposable
 
 object Global
 
 val EVENT_MANAGER = EventManager().apply { autoDiscovery() }
 
-val LOG: Logger = LoggerFactory.getLogger(Global::class.java)
+inline fun <reified T> logger(): Logger = LoggerFactory.getLogger(T::class.java)
+val LOG: Logger = logger<Global>()
 
 val JACKSON = ObjectMapper()
 
@@ -62,3 +62,9 @@ object Services: AutoCloseable {
 		serviceMap.values.forEach { it.close() }
 	}
 }
+
+inline fun <reified T: IEvent> ReactorEventHandler.on(crossinline consumer: T.() -> Unit): Disposable =
+		onEvent(T::class.java) { it.consumer() }
+
+inline fun <reified T: IEvent> ReactorEventHandler.take(n: Long = 1L, crossinline consumer: T.() -> Unit): Disposable =
+		processor.publishOn(scheduler).ofType(T::class.java).take(n).limitRequest(15).subscribe { it.consumer() }

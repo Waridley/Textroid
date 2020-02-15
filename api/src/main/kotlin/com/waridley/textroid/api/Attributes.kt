@@ -34,9 +34,11 @@ val KProperty<*>.undefined get() = path.undefined
 
 
 open class AttributeException(message: String? = null, cause: Throwable? = null) : Exception(message, cause)
-open class AttributeAssignmentException(id: Any?,
-                                        attribute: MaybeAttribute<*>?,
-                                        failure: Failure<Throwable>? = null): AttributeException(
+open class AttributeAssignmentException(
+		id: Any?,
+		attribute: MaybeAttribute<*>?,
+		failure: Failure<Throwable>? = null
+): AttributeException(
 		when (attribute) {
 			is Attribute -> "Failed to set attribute \"${attribute.path}\" to ${attribute.value} for id: $id"
 			is Undefined -> "Failed to clear attribute \"${attribute.path}\" for id: $id"
@@ -62,6 +64,12 @@ val KClass<*>.path
 
 val <T> Class<T>.path
 		get() = (canonicalName ?: name ?: simpleName?: toString().replace(" ", "_")).replace("com.waridley.textroid.", "")
+
+fun String.relativeTo(other: KClass<*>) = replaceFirst("${other.path}.", "")
+fun String.relativeTo(other: KParameter) = replaceFirst("${other.path}.", "")
+fun <T> String.relativeTo(other: Class<T>) = replaceFirst("${other.path}.", "")
+fun String.relativeTo(other: KCallable<*>) = replaceFirst("${other.path}.", "")
+inline fun <reified T> String.relativeTo() = relativeTo(T::class.java)
 
 
 inline operator fun <reified P, reified C> KProperty<P?>.div(other: KFunction1<P, C>) = PathNode(PathNode<Nothing?, P?>(this), other.syn)

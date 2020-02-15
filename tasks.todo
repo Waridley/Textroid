@@ -19,6 +19,7 @@ Features:
         ☐ Discord support
 
 Improvements:
-    ☐ Validate channel points redemptions
+    ☐ Validate channel points redemptions @high 
         ✔ Log all actions to MongoDB @done (2/11/2020, 4:01:13 AM)
         ☐ Check that redemption ID hasn't already been logged
+    ☐ Initialize services via events instead of spawning raw threads

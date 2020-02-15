@@ -9,6 +9,7 @@ import com.mongodb.client.model.Updates
 import com.waridley.textroid.api.Attribute
 import com.waridley.textroid.api.MaybeAttribute
 import com.waridley.textroid.api.Undefined
+import com.waridley.textroid.api.relativeTo
 import org.bson.Document
 import org.bson.conversions.Bson
 
@@ -75,12 +76,12 @@ infix fun Bson?.andOr(other: Bson?): Bson? {
 }
 
 
-val MaybeAttribute<*>.filter get() = when(this) {
-	is Attribute -> path eq value
-	is Undefined -> Filters.exists(path, false)
+fun MaybeAttribute<*>.filter(relativeTo: Class<*>) = when(this) {
+	is Attribute -> path.relativeTo(relativeTo) eq value
+	is Undefined -> Filters.exists(path.relativeTo(relativeTo), false)
 }
 
-val MaybeAttribute<*>.update get() = when (this) {
-	is Attribute -> Updates.set(path, value)
-	is Undefined -> Updates.unset(path)
+fun MaybeAttribute<*>.update(relativeTo: Class<*>) = when (this) {
+	is Attribute -> Updates.set(path.relativeTo(relativeTo), value)
+	is Undefined -> Updates.unset(path.relativeTo(relativeTo))
 }

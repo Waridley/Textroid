@@ -7,14 +7,18 @@ import com.github.philippheuer.events4j.reactor.ReactorEventHandler
 import reactor.core.Disposable
 import java.io.Closeable
 
-abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAGER, config: (TextroidEventHandler.() -> Unit)? = null): Closeable {
+abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAGER, initializer: (TextroidEventHandler.() -> Unit)? = null): Closeable {
 	
 	@PublishedApi internal val handler: ReactorEventHandler = eventManager.getEventHandler(ReactorEventHandler::class.java)
 	
 	constructor(config: TextroidEventHandler.() -> Unit): this(EVENT_MANAGER, config)
 	
 	init  {
-		config?.let { Thread { it() }.start() }
+		initializer?.let { config(it) }
+	}
+	
+	fun config(block: TextroidEventHandler.() -> Unit) {
+		Thread { block() }.start()
 	}
 	
 	inline fun <reified T: IEvent> on(crossinline consumer: T.() -> Unit): Disposable? {
@@ -38,6 +42,7 @@ abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAG
 	override fun close() {
 		subs.forEach { it.dispose() }
 	}
+	
 }
 
 abstract class TextroidEvent: Event()
