@@ -2,6 +2,7 @@
 package com.waridley.textroid.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.philippheuer.events4j.api.domain.IEvent
 import com.github.philippheuer.events4j.core.EventManager
 import com.github.philippheuer.events4j.core.domain.Event
@@ -9,6 +10,9 @@ import com.github.philippheuer.events4j.reactor.ReactorEventHandler
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.Disposable
+
+const val CURRENCY_SYMBOL = '⌬'
+var APP_ACCESS_CREDENTIAL: OAuth2Credential? = null
 
 object Global
 
@@ -19,7 +23,6 @@ val LOG: Logger = logger<Global>()
 
 val JACKSON = ObjectMapper()
 
-const val CURRENCY_SYMBOL = '⌬'
 
 object GlobalEventHandler: TextroidEventHandler()
 
@@ -36,6 +39,7 @@ object Services: AutoCloseable {
 	
 	fun add(service: AutoCloseable, name: String = service.javaClass.simpleName) {
 		if(serviceMap.putIfAbsent(name, service) != null) throw Exception("There is already a service named $name!")
+		else EVENT_MANAGER.serviceMediator.addService(name, service)
 	}
 	
 	operator fun get(name: String) = serviceMap[name]
@@ -45,16 +49,18 @@ object Services: AutoCloseable {
 		EVENT_MANAGER.serviceMediator.addService(name, service)
 	}
 	
-	operator fun invoke(block: Services.() -> Unit) {
+	operator fun invoke(block: Services.() -> Unit): Services {
 		this.block()
+		return this
 	}
 	
-	operator fun invoke(vararg services: AutoCloseable) {
+	operator fun invoke(vararg services: AutoCloseable): Services {
 		services.forEach { add(it) }
+		return this
 	}
 	
 	fun remove(name: String) {
-		serviceMap[name]?.close()
+		serviceMap[name]?.close() //Close previous service with given name if it exists
 		serviceMap.remove(name)
 	}
 	

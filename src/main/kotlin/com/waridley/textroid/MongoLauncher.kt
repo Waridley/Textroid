@@ -5,7 +5,6 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.prompt
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder
-import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.philippheuer.events4j.core.domain.Event
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider
 import com.github.twitch4j.pubsub.TwitchPubSub
@@ -14,7 +13,6 @@ import com.mongodb.client.MongoDatabase
 import com.waridley.textroid.api.*
 import com.waridley.textroid.credentials.AuthenticationHelper
 import com.waridley.textroid.credentials.DesktopAuthController
-import com.waridley.textroid.credentials.orNull
 import com.waridley.textroid.mongo.MongoEventLogger
 import com.waridley.textroid.mongo.credentials.MongoCredentialMap
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
@@ -75,18 +73,14 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 		credentialManager.registerIdentityProvider(idProvider)
 		val playerStorage = MongoPlayerStorage(db)
 		val authHelper = AuthenticationHelper(idProvider, redirectUrl)
-		val appCredential = (credStorage["TextroidAppAccessToken"] as OAuth2Credential?)
-				            ?: idProvider.appAccessToken.let { cred ->
-			                    (idProvider.getAdditionalCredentialInformation(cred).orNull() ?: cred)
-					                    .also { credStorage["TextroidAppAccessToken"] = it }
-		                    }
+		APP_ACCESS_CREDENTIAL = idProvider.appAccessToken
 		
-		val ttvUserStorage = MongoTtvUserStorage(db, credential = appCredential)
+		val ttvUserStorage = MongoTtvUserStorage(db, credential = APP_ACCESS_CREDENTIAL)
 		
 		Services (
 				MongoEventLogger(db),
 				ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER)),
-				WatchtimeMonitor(channelName, 1L, credential = appCredential),
+				WatchtimeMonitor(channelName, 3L, credential = APP_ACCESS_CREDENTIAL),
 				TtvChatGameClient(authHelper, channelName),
 				TtvEventConverter(playerStorage, ttvUserStorage),
 				Server(commandsScriptFilePath)

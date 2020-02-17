@@ -28,7 +28,7 @@ class WatchtimeMonitor(
 		eventManager: EventManager = EVENT_MANAGER
 ): TextroidEventHandler(eventManager) {
 	
-	val log = logger<WatchtimeMonitor>()
+	override val log = logger<WatchtimeMonitor>()
 	
 	private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 	
@@ -41,87 +41,137 @@ class WatchtimeMonitor(
 			on<TtvWatchtimeEvent.Online> { checkHosts() }
 			on<TtvWatchtimeEvent.Offline> { checkGuestChat() }
 			
-			on<StreamsResponse> {
-				streamListFuture.get().streams.firstOrNull()?.run {
-					if(type.equals("live", true)) {
-						getChatters(channelName) {
-							getHelixUsersFromLogins(allViewers + channelName) {
-								eventManager.publish(TtvWatchtimeEvent.Online(users, intervalMinutes))
-							}
-						}
-					} else {
-						log.error("Stream found, but type is not \"live\": {}", this)
-					}
-				} ?: getChatters(channelName) {
-					getHelixUsersFromLogins(allViewers + channelName) {
-						eventManager.publish(TtvWatchtimeEvent.Offline(users, intervalMinutes))
-					}
-				}
+			on<StreamsFutureEvent> {
+				this.waitForResponse()
 			}
-			on<GuestsResponse> {
-				guestsFuture.get().hosts.firstOrNull()?.let { hostRecord ->
-					hostRecord.targetLogin?.let {
-						getChatters(it) {
-							getHelixUsersFromLogins(allViewers + hostRecord.targetLogin) {
-								eventManager.publish(TtvWatchtimeEvent.Guest(users, intervalMinutes, hostRecord))
-							}
-						}
-					} ?: log.info("Not currently hosting anyone.")
-				}
+			on<GuestsFutureEvent> {
+				this.waitForResponse()
 			}
 			
-			on<HostsResponse> {
-				hostsFuture.get().hosts.forEach { hostRecord ->
-					getChatters(hostRecord.hostLogin) {
-						getHelixUsersFromLogins(allViewers + hostRecord.hostLogin) {
-							eventManager.publish(TtvWatchtimeEvent.Host(users, intervalMinutes, hostRecord))
-						}
-					}
-				}
+			on<HostsFutureEvent> {
+				this.waitForResponse()
 			}
 			
-			on<ChattersResponse> { this.chattersFuture.get(30L, SECONDS).callback() }
+//			on<ChattersFutureEvent> {
+//				log.trace("ChattersFutureEvent: $this")
+//				while(!chattersFuture.isDone) { /* wait */ }
+//				chattersFuture.get(30L, SECONDS)?.also { log.trace("Chatters: $it") }?.callback()
+//			}
 		}
 	}
 	
 	fun checkOnline() {
-		val future = helix.getStreams(
-				credential?.accessToken,
-				"", null, 1, null, null, null, null, listOf(channelName)
-		).queue()
-		
-		eventManager.publish(StreamsResponse(future))
+		try {
+			println("\n\n")
+			log.trace("Checking if $channelName is online.")
+			val future = helix.getStreams(
+					credential?.accessToken,
+					"", null, 1, null, null, null, null, listOf(channelName)
+			).queue()
+			
+//			publish(StreamsFutureEvent(future))
+			StreamsFutureEvent(future).waitForResponse()
+		} catch (e: Exception) {
+			log.error("Error while checking if online: {}", e)
+		}
 	}
 	
 	fun checkGuestChat() {
-		val future = tmi.getHosts(listOf(channelId)).queue()
-		eventManager.publish(GuestsResponse(future))
+		try {
+			val future = tmi.getHosts(listOf(channelId)).queue()
+//		publish(GuestsFutureEvent(future))
+			GuestsFutureEvent(future).waitForResponse()
+		} catch (e: Exception) {
+			log.error("Error getting guest chatters: {}", e)
+		}
 	}
 	
 	fun checkHosts() {
-		val future = tmi.getHostsOf(channelId).queue()
-		eventManager.publish(HostsResponse(future))
+		try {
+			val future = tmi.getHostsOf(channelId).queue()
+//		publish(HostsFutureEvent(future))
+			HostsFutureEvent(future).waitForResponse()
+		} catch (e: Exception) {
+			log.error("Error getting hosts: {}", e)
+		}
 	}
 	
 	fun getChatters(channelName: String, callback: Chatters.() -> Unit) {
-		val chattersFuture = tmi.getChatters(channelName).queue()
-		eventManager.publish(ChattersResponse(chattersFuture, callback))
+		try {
+			val chattersFuture = tmi.getChatters(channelName).execute()
+//		eventManager.publish(ChattersFutureEvent(chattersFuture, callback))
+			chattersFuture.callback()
+		} catch (e: Exception) {
+			log.error("Error getting chatters: {}", e)
+		}
+	}
+	
+	private fun StreamsFutureEvent.waitForResponse() {
+		log.trace("$this")
+		streamListFuture.get(30L, SECONDS)?.also { log.trace("StreamList: $it") }?.streams?.firstOrNull()?.run {
+			log.trace("Stream record: $this")
+			if(type.equals("live", true)) {
+				getChatters(channelName) {
+					getHelixUsers(allViewers + channelName) {
+						publish(TtvWatchtimeEvent.Online(users, intervalMinutes))
+					}
+				}
+			} else {
+				log.error("Stream found, but type is not \"live\": {}", this)
+			}
+		} ?: run {
+			log.trace("No stream record found. Getting offline chatters.")
+			getChatters(channelName) {
+				log.trace("Getting Helix users for $this")
+				getHelixUsers(allViewers + channelName) {
+					log.trace("Publishing offline watchtime event for: $this")
+					publish(TtvWatchtimeEvent.Offline(users, intervalMinutes))
+				}
+			}
+		}
+	}
+	
+	private fun GuestsFutureEvent.waitForResponse() {
+		guestsFuture.get(30L, SECONDS)?.also { log.trace("Guest: $it") }?.hosts?.firstOrNull()?.let { hostRecord ->
+			hostRecord.targetLogin?.let {
+				getChatters(it) {
+					getHelixUsers(allViewers + hostRecord.targetLogin) {
+						publish(TtvWatchtimeEvent.Guest(users, intervalMinutes, hostRecord))
+					}
+				}
+			} ?: log.info("Not currently hosting anyone.")
+		}
+	}
+	
+	private fun HostsFutureEvent.waitForResponse() {
+		hostsFuture.get(30L, SECONDS)?.also { log.trace("Hosts: $it") }?.hosts?.forEach { hostRecord ->
+			getChatters(hostRecord.hostLogin) {
+				getHelixUsers(allViewers + hostRecord.hostLogin) {
+					publish(TtvWatchtimeEvent.Host(users, intervalMinutes, hostRecord))
+				}
+			}
+		}
 	}
 	
 	override fun close() {
-		executor.shutdown()
-		executor.awaitTermination(30L, MINUTES)
-		super.close()
+		try {
+			executor.shutdown()
+			executor.awaitTermination(30L, SECONDS)
+		} catch (e: Exception) {
+			log.error("Couldn't shut down executor: {}", e)
+		} finally {
+			super.close()
+		}
 	}
 	
-	private class StreamsResponse(val streamListFuture: Future<StreamList>): Event()
+	private data class StreamsFutureEvent(val streamListFuture: Future<StreamList>): Event()
 	
-	private class ChattersResponse(val chattersFuture: Future<Chatters>, val callback: Chatters.() -> Unit): Event()
-	private class GuestsResponse(val guestsFuture: Future<HostList>): Event()
-	private class HostsResponse(val hostsFuture: Future<HostList>): Event()
+	private data class ChattersFutureEvent(val chattersFuture: Future<Chatters>, val callback: Chatters.() -> Unit): Event()
+	private data class GuestsFutureEvent(val guestsFuture: Future<HostList>): Event()
+	private data class HostsFutureEvent(val hostsFuture: Future<HostList>): Event()
 	
 	
-	fun getHelixUsersFromLogins(logins: List<String>, consumer: UserList.() -> Unit) {
+	fun getHelixUsers(logins: List<String>, consumer: UserList.() -> Unit) {
 		val loginLists = logins / 100
 		for(list in loginLists) {
 			val userList: UserList = helix.getUsers(
