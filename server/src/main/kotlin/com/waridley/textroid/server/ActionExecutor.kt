@@ -40,11 +40,15 @@ class ScriptExecutor(commandsScriptFilePath: String = "server/src/main/resources
 			chatCommands = engine.eval(commandsScript)?.javaClass?.declaredMethods?.map { it.name }?.filter {
 				!listOf("equals", "hashCode", "toString", "main").contains(it) && !it.contains("$")
 			}?.toHashSet() ?: emptySet()
-			chatCommands
+			chatCommands.also { LOG.trace("Commands: $it")}
 		} catch (e: Exception) {
 			e.printStackTrace()
 			null
 		}
+	}
+	
+	init {
+		reloadCommands()
 	}
 	
 	val commandStates: MutableMap<String, StringBuilder> = mutableMapOf()
@@ -88,10 +92,12 @@ class ScriptExecutor(commandsScriptFilePath: String = "server/src/main/resources
 					commandStates.remove(command)
 				}
 				
-			}
-			else -> {
+			} else -> {
+				LOG.trace("Not a built-in command. Checking script file for $it")
 				if(chatCommands.contains(command)) {
-					when(val consumer = (engine as Invocable).invokeFunction(command)) {
+					val consumer = (engine as Invocable).invokeFunction(command)
+					LOG.trace(consumer.toString())
+					when(consumer) {
 						is Response -> respond("${consumer(this)}")
 						is Trigger  -> eventManager.publish(consumer(this))
 						else        -> {
@@ -104,6 +110,6 @@ class ScriptExecutor(commandsScriptFilePath: String = "server/src/main/resources
 		}
 	}
 	
-	fun handle(event: ChatCommandEvent) = event.execute()
+	fun handle(event: ChatCommandEvent) = event.also { LOG.trace(it.toString()) }.execute()
 	
 }

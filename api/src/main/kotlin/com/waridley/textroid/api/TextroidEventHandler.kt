@@ -16,8 +16,14 @@ abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAG
 	
 	constructor(config: TextroidEventHandler.() -> Unit): this(EVENT_MANAGER, config)
 	
+	val subs: MutableList<IDisposable>
+	
 	init  {
-		initializer?.let { config(it) }
+		subs = mutableListOf()
+		initializer?.let {
+//			config(it) //Possibly causing loss of events and other weird bugs
+			it()
+		}
 	}
 	
 	fun config(block: TextroidEventHandler.() -> Unit) {
@@ -33,12 +39,11 @@ abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAG
 					log.error("{}", e)
 				}
 			}
-		}.also { subs.add(it) }
+		}?.also { subs.add(it) }
 	}
 	
 	fun publish(event: IEvent) = eventManager.publish(event)
 	
-	val subs = mutableListOf<IDisposable>()
 	
 	override fun close() {
 		log.warn("Closing event handler {}", this.javaClass)

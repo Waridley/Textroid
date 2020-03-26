@@ -44,10 +44,10 @@
 	</root>
 
 	<logger name="com.base22" level="trace"/>
-	<logger name="com.mongodb.driver" level="debug"/>
+	<logger name="com.mongodb.driver" level="info"/>
 	<logger name="com.waridley.textroid" level="trace"/>
 	<logger name="com.github" level="trace"/>
-	<logger name="com.github.twitch4j.helix" level="trace" />
-	<logger name="com.github.twitch4j.tmi" level="trace" />
+	<logger name="com.github.twitch4j.helix" level="info" />
+	<logger name="com.github.twitch4j.tmi" level="info" />
 
 </configuration>

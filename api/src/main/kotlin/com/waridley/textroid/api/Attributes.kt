@@ -115,7 +115,7 @@ inline val <reified R, reified T> KFunction1<R, T>.syn: KProperty1<R, T>
 @PublishedApi internal class SyntheticJavaProperty<R, T>(val receiver: Class<R>, javaGetter: Function1<R, T>, type: Class<T>) : KProperty1<R, T> {
 	val it = javaGetter as KCallable<*>
 	
-	override val name = it.name.replace("get", "").run { "${this[0]}${substring(1, length)}" }
+	override val name = it.name.replace("get", "").run { "${this[0].toLowerCase()}${substring(1, length)}" }
 	
 	override val annotations: List<Annotation> get() = it.annotations
 	override val getter: KProperty1.Getter<R, T> get() = throw NotImplementedError()

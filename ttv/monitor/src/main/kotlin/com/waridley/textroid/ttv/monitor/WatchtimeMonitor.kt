@@ -42,14 +42,14 @@ class WatchtimeMonitor(
 			on<TtvWatchtimeEvent.Offline> { checkGuestChat() }
 			
 			on<StreamsFutureEvent> {
-				this.waitForResponse()
+				waitForResponse()
 			}
 			on<GuestsFutureEvent> {
-				this.waitForResponse()
+				waitForResponse()
 			}
 			
 			on<HostsFutureEvent> {
-				this.waitForResponse()
+				waitForResponse()
 			}
 			
 //			on<ChattersFutureEvent> {
@@ -69,8 +69,8 @@ class WatchtimeMonitor(
 					"", null, 1, null, null, null, null, listOf(channelName)
 			).queue()
 			
-//			publish(StreamsFutureEvent(future))
-			StreamsFutureEvent(future).waitForResponse()
+			publish(StreamsFutureEvent(future))
+//			StreamsFutureEvent(future).waitForResponse()
 		} catch (e: Exception) {
 			log.error("Error while checking if online: {}", e)
 		}
@@ -79,8 +79,8 @@ class WatchtimeMonitor(
 	fun checkGuestChat() {
 		try {
 			val future = tmi.getHosts(listOf(channelId)).queue()
-//		publish(GuestsFutureEvent(future))
-			GuestsFutureEvent(future).waitForResponse()
+			publish(GuestsFutureEvent(future))
+//			GuestsFutureEvent(future).waitForResponse()
 		} catch (e: Exception) {
 			log.error("Error getting guest chatters: {}", e)
 		}
@@ -89,8 +89,8 @@ class WatchtimeMonitor(
 	fun checkHosts() {
 		try {
 			val future = tmi.getHostsOf(channelId).queue()
-//		publish(HostsFutureEvent(future))
-			HostsFutureEvent(future).waitForResponse()
+			publish(HostsFutureEvent(future))
+//			HostsFutureEvent(future).waitForResponse()
 		} catch (e: Exception) {
 			log.error("Error getting hosts: {}", e)
 		}
@@ -98,9 +98,9 @@ class WatchtimeMonitor(
 	
 	fun getChatters(channelName: String, callback: Chatters.() -> Unit) {
 		try {
-			val chattersFuture = tmi.getChatters(channelName).execute()
-//		eventManager.publish(ChattersFutureEvent(chattersFuture, callback))
-			chattersFuture.callback()
+			val chattersFuture = tmi.getChatters(channelName).queue()
+			publish(ChattersFutureEvent(chattersFuture, callback))
+//			chattersFuture.callback()
 		} catch (e: Exception) {
 			log.error("Error getting chatters: {}", e)
 		}
@@ -146,8 +146,11 @@ class WatchtimeMonitor(
 	private fun HostsFutureEvent.waitForResponse() {
 		hostsFuture.get(30L, SECONDS)?.also { log.trace("Hosts: $it") }?.hosts?.forEach { hostRecord ->
 			getChatters(hostRecord.hostLogin) {
-				getHelixUsers(allViewers + hostRecord.hostLogin) {
-					publish(TtvWatchtimeEvent.Host(users, intervalMinutes, hostRecord))
+				getHelixUsers(listOf(hostRecord.hostLogin)) {
+					val hostChannel = users[0]
+					getHelixUsers(allViewers) {
+						publish(TtvWatchtimeEvent.Host(users, hostChannel, intervalMinutes, hostRecord))
+					}
 				}
 			}
 		}
@@ -187,7 +190,7 @@ class WatchtimeMonitor(
 sealed class TtvWatchtimeEvent: Event() {
 	data class Online(val users: List<User>, val time: Long): TtvWatchtimeEvent()
 	data class Guest(val users: List<User>, val time: Long, val hostRecord: com.github.twitch4j.tmi.domain.Host): TtvWatchtimeEvent()
-	data class Host(val users: List<User>, val time: Long, val hostRecord: com.github.twitch4j.tmi.domain.Host): TtvWatchtimeEvent()
+	data class Host(val users: List<User>, val hostChannel: User, val time: Long, val hostRecord: com.github.twitch4j.tmi.domain.Host): TtvWatchtimeEvent()
 	data class Offline(val users: List<User>, val time: Long): TtvWatchtimeEvent()
 }
 

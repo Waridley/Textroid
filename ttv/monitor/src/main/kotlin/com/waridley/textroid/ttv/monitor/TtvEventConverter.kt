@@ -21,9 +21,17 @@ class TtvEventConverter(val playerStorage: PlayerStorageInterface, val ttvUserSt
 			val ttvUserCache = mutableMapOf<String, TtvUser>()
 			
 			fun ChannelPointsUser.findPlayer() =
-					playerCache[id] ?: playerStorage.findOrCreateOne(TtvUser::helixUser / User::getId stores id, listOf(Player::username stores login, Player::nickname stores (displayName ?: login))).also { playerCache[id] = it }
+					playerCache[id] ?: playerStorage.findOrCreateOne(
+							TtvUser::id stores id,
+							listOf(Player::username stores login,
+							       Player::nickname stores (displayName ?: login)
+							)
+					).also { playerCache[id] = it }
 			fun EventUser.findPlayer() =
-					playerCache[id] ?: playerStorage.findOrCreateOne(TtvUser::helixUser / User::getId stores id, name).also { playerCache[id] = it }
+					playerCache[id] ?: playerStorage.findOrCreateOne(
+							TtvUser::id stores id,
+							name
+					).also { playerCache[id] = it }
 			
 			fun User.findTtvUser() =
 					ttvUserCache[id] ?: ttvUserStorage.findOrCreateOne(this).also { ttvUserCache[id] = it }
@@ -60,8 +68,9 @@ class TtvEventConverter(val playerStorage: PlayerStorageInterface, val ttvUserSt
 				users.forEach { it.findTtvUser().guestMinutes += time }
 			}
 			on<TtvWatchtimeEvent.Host> {
-				log.info("In ${hostRecord.hostLogin}'s chat while hosting ${hostRecord.targetLogin}: ${users.map{it.displayName}}")
+				log.info("In ${hostChannel.displayName}'s chat while they're hosting ${hostRecord.targetLogin}: ${users.map{it.displayName}}")
 				users.forEach { it.findTtvUser().hostMinutes += time }
+				
 			}
 			
 		}

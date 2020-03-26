@@ -9,10 +9,10 @@ class TtvUser(@JsonValue override val id: TtvUserId, override val storage: TtvUs
 	
 	val helixUser: User by storage(::helixUser)
 	
-	var onlineMinutes: Long by storage(::onlineMinutes)
-	var offlineMinutes: Long by storage(::offlineMinutes)
-	var guestMinutes: Long by storage(::guestMinutes)
-	var hostMinutes: Long by storage(::hostMinutes)
+	var onlineMinutes: Long by storage(::onlineMinutes) { 0L }
+	var offlineMinutes: Long by storage(::offlineMinutes) { 0L }
+	var guestMinutes: Long by storage(::guestMinutes) { 0L }
+	var hostMinutes: Long by storage(::hostMinutes) { 0L }
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
