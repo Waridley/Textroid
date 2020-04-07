@@ -1,20 +1,22 @@
 package com.waridley.textroid.api
 
+import com.github.philippheuer.events4j.api.domain.IDisposable
 import com.github.philippheuer.events4j.api.domain.IEvent
 import com.github.philippheuer.events4j.core.EventManager
 import com.github.philippheuer.events4j.core.domain.Event
 import com.github.philippheuer.events4j.reactor.ReactorEventHandler
+import com.github.philippheuer.events4j.simple.SimpleEventHandler
 import reactor.core.Disposable
 
 abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAGER, initializer: (TextroidEventHandler.() -> Unit)? = null): AutoCloseable {
 	
 	open val log = logger<TextroidEventHandler>()
 	
-	@PublishedApi internal val handler = eventManager.getEventHandler(ReactorEventHandler::class.java)
+	@PublishedApi internal val handler = eventManager.getEventHandler(SimpleEventHandler::class.java)
 	
 	constructor(config: TextroidEventHandler.() -> Unit): this(EVENT_MANAGER, config)
 	
-	val subs: MutableList<Disposable>
+	val subs: MutableList<IDisposable>
 	
 	init  {
 		subs = mutableListOf()
@@ -28,7 +30,7 @@ abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAG
 		Thread { block() }.start()
 	}
 	
-	inline fun <reified T: IEvent> on(crossinline consumer: T.() -> Unit): Disposable? {
+	inline fun <reified T: IEvent> on(crossinline consumer: T.() -> Unit): IDisposable? {
 		return handler.onEvent(T::class.java) {
 			it.run {
 				try {
