@@ -40,20 +40,12 @@ class WatchtimeMonitor(
 			executor.scheduleAtFixedRate(::checkOnline, 0L, intervalMinutes, MINUTES)
 			on<TtvWatchtimeEvent.Online> { checkHosts() }
 			on<TtvWatchtimeEvent.Offline> { checkGuestChat() }
-			
-			on<StreamsFutureEvent> {
-				waitForResponse()
-			}
-			on<GuestsFutureEvent> {
-				waitForResponse()
-			}
-			
-			on<HostsFutureEvent> {
-				waitForResponse()
-			}
+			on<StreamsFutureEvent> { waitForResponse() }
+			on<GuestsFutureEvent> { waitForResponse() }
+			on<HostsFutureEvent> { waitForResponse() }
+			on<ChattersFutureEvent> { waitForResponse() }
 			
 //			on<ChattersFutureEvent> {
-//				log.trace("ChattersFutureEvent: $this")
 //				while(!chattersFuture.isDone) { /* wait */ }
 //				chattersFuture.get(30L, SECONDS)?.also { log.trace("Chatters: $it") }?.callback()
 //			}
@@ -78,6 +70,7 @@ class WatchtimeMonitor(
 	
 	fun checkGuestChat() {
 		try {
+			log.info("Checking if $channelName is hosting anyone.")
 			val future = tmi.getHosts(listOf(channelId)).queue()
 			publish(GuestsFutureEvent(future))
 //			GuestsFutureEvent(future).waitForResponse()
@@ -88,6 +81,7 @@ class WatchtimeMonitor(
 	
 	fun checkHosts() {
 		try {
+			log.info("Checking for hosts of $channelName.")
 			val future = tmi.getHostsOf(channelId).queue()
 			publish(HostsFutureEvent(future))
 //			HostsFutureEvent(future).waitForResponse()
@@ -98,6 +92,7 @@ class WatchtimeMonitor(
 	
 	fun getChatters(channelName: String, callback: Chatters.() -> Unit) {
 		try {
+			log.trace("Requesting chatters list.")
 			val chattersFuture = tmi.getChatters(channelName).queue()
 			publish(ChattersFutureEvent(chattersFuture, callback))
 //			chattersFuture.callback()
@@ -111,6 +106,7 @@ class WatchtimeMonitor(
 		streamListFuture.get(30L, SECONDS)?.also { log.trace("StreamList: $it") }?.streams?.firstOrNull()?.run {
 			log.trace("Stream record: $this")
 			if(type.equals("live", true)) {
+				log.info("$channelName is live!")
 				getChatters(channelName) {
 					getHelixUsers(allViewers + channelName) {
 						publish(TtvWatchtimeEvent.Online(users, intervalMinutes))
@@ -120,7 +116,7 @@ class WatchtimeMonitor(
 				log.error("Stream found, but type is not \"live\": {}", this)
 			}
 		} ?: run {
-			log.trace("No stream record found. Getting offline chatters.")
+			log.info("No stream record found. Getting offline chatters.")
 			getChatters(channelName) {
 				log.trace("Getting Helix users for $this")
 				getHelixUsers(allViewers + channelName) {
@@ -154,6 +150,10 @@ class WatchtimeMonitor(
 				}
 			}
 		}
+	}
+	
+	private fun ChattersFutureEvent.waitForResponse() {
+		chattersFuture.get(30L, SECONDS)?.also { log.trace("Chatters: $it") }?.callback()
 	}
 	
 	override fun close() {
