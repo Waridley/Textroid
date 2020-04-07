@@ -55,7 +55,7 @@ class WatchtimeMonitor(
 	fun checkOnline() {
 		try {
 			println("\n\n")
-			log.trace("Checking if $channelName is online.")
+			log.info("Checking if $channelName is online.")
 			val future = helix.getStreams(
 					credential?.accessToken,
 					"", null, 1, null, null, null, null, listOf(channelName)
