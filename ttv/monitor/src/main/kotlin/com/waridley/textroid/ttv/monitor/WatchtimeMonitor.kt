@@ -102,6 +102,7 @@ class WatchtimeMonitor(
 			if(type.equals("live", true)) {
 				log.info("$channelName is live!")
 				getChatters(channelName) {
+					log.trace("Getting Helix users for $this")
 					getHelixUsers(allViewers + channelName) {
 						publish(TtvWatchtimeEvent.Online(this, intervalMinutes))
 					}
@@ -125,6 +126,7 @@ class WatchtimeMonitor(
 		guestsFuture.get(30L, SECONDS)?.also { log.trace("Guest: $it") }?.hosts?.firstOrNull()?.let { hostRecord ->
 			hostRecord.targetLogin?.let {
 				getChatters(it) {
+					log.trace("Getting Helix users for $this")
 					getHelixUsers(allViewers + hostRecord.targetLogin) {
 						publish(TtvWatchtimeEvent.Guest(this, intervalMinutes, hostRecord))
 					}
@@ -137,6 +139,7 @@ class WatchtimeMonitor(
 		hostsFuture.get(30L, SECONDS)?.also { log.trace("Hosts: $it") }?.hosts?.forEach { hostRecord ->
 			getChatters(hostRecord.hostLogin) {
 				getHelixUsers(listOf(hostRecord.hostLogin)) {
+					log.trace("Getting Helix users for $this")
 					val hostChannel = this[0]
 					getHelixUsers(allViewers) {
 						publish(TtvWatchtimeEvent.Host(this, hostChannel, intervalMinutes, hostRecord))
@@ -184,6 +187,9 @@ class WatchtimeMonitor(
 					list
 			).execute()
 			foundUsers.addAll(userList.users)
+		}
+		for(user in foundUsers) {
+			helixUserCache[user.login] = user
 		}
 		consumer(foundUsers)
 	}
