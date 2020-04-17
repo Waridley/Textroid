@@ -17,7 +17,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit.*
-import kotlin.math.min
 
 class WatchtimeMonitor(
 		val channelName: String,
@@ -44,11 +43,6 @@ class WatchtimeMonitor(
 			on<GuestsFutureEvent> { waitForResponse() }
 			on<HostsFutureEvent> { waitForResponse() }
 			on<ChattersFutureEvent> { waitForResponse() }
-			
-//			on<ChattersFutureEvent> {
-//				while(!chattersFuture.isDone) { /* wait */ }
-//				chattersFuture.get(30L, SECONDS)?.also { log.trace("Chatters: $it") }?.callback()
-//			}
 		}
 	}
 	
@@ -109,7 +103,7 @@ class WatchtimeMonitor(
 				log.info("$channelName is live!")
 				getChatters(channelName) {
 					getHelixUsers(allViewers + channelName) {
-						publish(TtvWatchtimeEvent.Online(users, intervalMinutes))
+						publish(TtvWatchtimeEvent.Online(this, intervalMinutes))
 					}
 				}
 			} else {
@@ -121,7 +115,7 @@ class WatchtimeMonitor(
 				log.trace("Getting Helix users for $this")
 				getHelixUsers(allViewers + channelName) {
 					log.trace("Publishing offline watchtime event for: $this")
-					publish(TtvWatchtimeEvent.Offline(users, intervalMinutes))
+					publish(TtvWatchtimeEvent.Offline(this, intervalMinutes))
 				}
 			}
 		}
@@ -132,7 +126,7 @@ class WatchtimeMonitor(
 			hostRecord.targetLogin?.let {
 				getChatters(it) {
 					getHelixUsers(allViewers + hostRecord.targetLogin) {
-						publish(TtvWatchtimeEvent.Guest(users, intervalMinutes, hostRecord))
+						publish(TtvWatchtimeEvent.Guest(this, intervalMinutes, hostRecord))
 					}
 				}
 			} ?: log.info("Not currently hosting anyone.")
@@ -143,9 +137,9 @@ class WatchtimeMonitor(
 		hostsFuture.get(30L, SECONDS)?.also { log.trace("Hosts: $it") }?.hosts?.forEach { hostRecord ->
 			getChatters(hostRecord.hostLogin) {
 				getHelixUsers(listOf(hostRecord.hostLogin)) {
-					val hostChannel = users[0]
+					val hostChannel = this[0]
 					getHelixUsers(allViewers) {
-						publish(TtvWatchtimeEvent.Host(users, hostChannel, intervalMinutes, hostRecord))
+						publish(TtvWatchtimeEvent.Host(this, hostChannel, intervalMinutes, hostRecord))
 					}
 				}
 			}
@@ -173,17 +167,25 @@ class WatchtimeMonitor(
 	private data class GuestsFutureEvent(val guestsFuture: Future<HostList>): Event()
 	private data class HostsFutureEvent(val hostsFuture: Future<HostList>): Event()
 	
-	
-	fun getHelixUsers(logins: List<String>, consumer: UserList.() -> Unit) {
-		val loginLists = logins / 100
+	private val helixUserCache = mutableMapOf<String, User>()
+	fun getHelixUsers(logins: List<String>, consumer: List<User>.() -> Unit) {
+		val foundUsers = mutableListOf<User>()
+		val unknownLogins = mutableListOf<String>()
+		for(login in logins) {
+			helixUserCache[login]?.let {
+				foundUsers += it
+			} ?: run { unknownLogins += login }
+		}
+		val loginLists = unknownLogins.chunked(100)
 		for(list in loginLists) {
 			val userList: UserList = helix.getUsers(
 					credential?.accessToken,
 					null,
 					list
 			).execute()
-			consumer(userList)
+			foundUsers.addAll(userList.users)
 		}
+		consumer(foundUsers)
 	}
 }
 
@@ -192,12 +194,4 @@ sealed class TtvWatchtimeEvent: Event() {
 	data class Guest(val users: List<User>, val time: Long, val hostRecord: com.github.twitch4j.tmi.domain.Host): TtvWatchtimeEvent()
 	data class Host(val users: List<User>, val hostChannel: User, val time: Long, val hostRecord: com.github.twitch4j.tmi.domain.Host): TtvWatchtimeEvent()
 	data class Offline(val users: List<User>, val time: Long): TtvWatchtimeEvent()
-}
-
-operator fun <T> List<T>.div(chunkSize: Int): Sequence<List<T>> {
-	return sequence {
-		for(i in 0..size step chunkSize) {
-			yield(subList(i, min(i + chunkSize, size)))
-		}
-	}
 }

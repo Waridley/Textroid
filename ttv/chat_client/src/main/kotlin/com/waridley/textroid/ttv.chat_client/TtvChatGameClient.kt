@@ -6,7 +6,7 @@ import com.github.twitch4j.chat.TwitchChatBuilder
 import com.waridley.textroid.api.EVENT_MANAGER
 import com.waridley.textroid.credentials.AuthenticationHelper
 
-class TtvChatGameClient(authHelper: AuthenticationHelper, channelName: String, commandPrefix: String = "%"): AutoCloseable {
+class TtvChatGameClient(authHelper: AuthenticationHelper, channelName: String, commandPrefix: String = ">"): AutoCloseable {
 	
 	var twitchChat: TwitchChat? = null
 	

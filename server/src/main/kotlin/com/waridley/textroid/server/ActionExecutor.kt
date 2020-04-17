@@ -31,7 +31,7 @@ class ScriptExecutor(commandsScriptFilePath: String = "server/src/main/resources
 	private val engine = ScriptEngineManager(classLoader).getEngineByExtension("kts")
 	
 	private val commandsScriptFile = File(commandsScriptFilePath)
-	private val commandsScript get() = commandsScriptFile.readText() + "\nthis"
+	private val commandsScript get() = commandsScriptFile.readText() + "\nthis" // make the script return itself
 	
 	var chatCommands = emptySet<String>()
 	fun reloadCommands(): Set<String>? {
