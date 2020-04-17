@@ -56,11 +56,11 @@ class TtvEventConverter(val playerStorage: PlayerStorageInterface, val ttvUserSt
 			}
 			
 			on<TtvWatchtimeEvent.Online> {
-				log.trace("Watching live: ${users.map{it.displayName}}")
+				log.info("Watching live: ${users.map{it.displayName}}")
 				users.forEach { it.findTtvUser().onlineMinutes += time }
 			}
 			on<TtvWatchtimeEvent.Offline> {
-				log.trace("In chat while offline: ${users.map{it.displayName}}")
+				log.info("In chat while offline: ${users.map{it.displayName}}")
 				users.forEach { it.findTtvUser().offlineMinutes += time }
 			}
 			on<TtvWatchtimeEvent.Guest> {
