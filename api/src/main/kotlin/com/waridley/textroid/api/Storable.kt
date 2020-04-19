@@ -6,7 +6,10 @@ import kotlin.reflect.KCallable
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.jvmErasure
 
-abstract class Storable<T: Storable<T, I, S>, I: StorageId<T, I, S, *>, S: StorageInterface<T, I>>(@JsonValue open val id: I, open val storage: S, val type: Class<T>) {
+abstract class Storable<
+		T: Storable<T, I, S>,
+		I: StorageId<T, I, S, *>,
+		S: StorageInterface<T, I>>(@JsonValue open val id: I, open val storage: S, val type: Class<T>) {
 	
 	@PublishedApi internal inline operator fun <reified T> get(path: String): T = readAttribute<T>(path).unwrap()
 	inline operator fun <reified T> get(property: KProperty<T>): T =
@@ -44,7 +47,11 @@ abstract class Storable<T: Storable<T, I, S>, I: StorageId<T, I, S, *>, S: Stora
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-interface StorageId<T: Storable<T, I, S>, I: StorageId<T, I, S, Q>, S: StorageInterface<T, I>, Q> {
+interface StorageId<
+		T: Storable<T, I, S>,
+		I: StorageId<T, I, S, Q>,
+		S: StorageInterface<T, I>,
+		Q> {
 	val _id: Q
 	
 	infix fun storedIn(storage: S): T
@@ -84,7 +91,10 @@ open class UniqueStorage<UT> @PublishedApi internal constructor(val path: String
 	
 }
 
-open class ForeignStorage<FT: Storable<FT, FI, FS>, FI: StorageId<FT, FI, FS, *>, FS: StorageInterface<FT, FI>> @PublishedApi internal constructor(val path: String, val foreignStorage: FS) {
+open class ForeignStorage<
+		FT: Storable<FT, FI, FS>,
+		FI: StorageId<FT, FI, FS, *>,
+		FS: StorageInterface<FT, FI>> @PublishedApi internal constructor(val path: String, val foreignStorage: FS) {
 	var init: (Storable<*, *, *>.() -> FT?)? = null
 	fun init(initializer: (Storable<*, *, *>.() -> FT?)?): ForeignStorage<FT, FI, FS> {
 		this.init = initializer; return this
@@ -121,7 +131,12 @@ inline fun <reified T> uniqueStorage() = uniqueStorage(T::class.java)
 inline fun <reified T> uniqueStorage(key: KCallable<T>, noinline initializer: Storable<*, *, *>.() -> T) =
 		UniqueStorage<T>(key.path).init(initializer)
 
-inline fun <reified T: Storable<T, I, S>, I: StorageId<T, I, S, *>, S: StorageInterface<T, I>> foreignKey(key: KCallable<T>, foreignStorage: S) =
-		ForeignStorage(key.path, foreignStorage)
-inline fun <reified T: Storable<T, I, S>, I: StorageId<T, I, S, *>, S: StorageInterface<T, I>> foreignKey(key: Class<T>, foreignStorage: S) =
-		ForeignStorage(key.path, foreignStorage)
+inline fun <reified T: Storable<T, I, S>,
+		I: StorageId<T, I, S, *>,
+		S: StorageInterface<T, I>>
+		foreignKey(key: KCallable<T>, foreignStorage: S)= ForeignStorage(key.path, foreignStorage)
+
+inline fun <reified T: Storable<T, I, S>,
+		I: StorageId<T, I, S, *>,
+		S: StorageInterface<T, I>>
+		foreignKey(key: Class<T>, foreignStorage: S) = ForeignStorage(key.path, foreignStorage)

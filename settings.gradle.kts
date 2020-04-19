@@ -4,13 +4,15 @@ include(
 		"api",
 		"api:backend",
 		"api:frontend",
+		"api:game",
 		"credentials",
 		"engine",
 		"mongo",
 		"server",
 		"ttv",
 		"ttv:chat_client",
-		"ttv:monitor"
+		"ttv:monitor",
+		"textroid-prime"
 )
 
 

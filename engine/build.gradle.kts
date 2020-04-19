@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 dependencies {
-	api(project(":api"))
+	api(project(":api:game"))
 	
 	implementation("com.fasterxml.jackson.core", "jackson-annotations")
-	implementation(kotlin("scripting-jsr223"))
+	api(kotlin("scripting-jsr223"))
 }
 
 val compileKotlin: KotlinCompile by tasks

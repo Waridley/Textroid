@@ -1,7 +1,7 @@
 package com.waridley.textroid.server
 
 import com.github.philippheuer.events4j.core.EventManager
-import com.waridley.textroid.BankAccount
+import com.waridley.textroid.api.game.BankAccount
 import com.waridley.textroid.ChatCommandEvent
 import com.waridley.textroid.Response
 import com.waridley.textroid.Trigger

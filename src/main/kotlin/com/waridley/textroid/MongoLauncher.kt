@@ -13,6 +13,9 @@ import com.mongodb.client.MongoDatabase
 import com.waridley.textroid.api.*
 import com.waridley.textroid.credentials.AuthenticationHelper
 import com.waridley.textroid.credentials.DesktopAuthController
+import com.waridley.textroid.engine.Game
+import com.waridley.textroid.api.game.GameWorld
+import com.waridley.textroid.engine.ScriptLoader
 import com.waridley.textroid.mongo.MongoEventLogger
 import com.waridley.textroid.mongo.credentials.MongoCredentialMap
 import com.waridley.textroid.mongo.game.MongoPlayerStorage
@@ -77,13 +80,15 @@ class MongoLauncher : CliktCommand(name = "textroid") {
 		
 		val ttvUserStorage = MongoTtvUserStorage(db, credential = APP_ACCESS_CREDENTIAL)
 		
+		val gameWorld =  ScriptLoader<GameWorld>().load("textroid-prime/src/main/resources/TextroidUniverse.kts")!!
+		
 		Services (
 				MongoEventLogger(db),
 				ChannelPointsMonitor(authHelper, TwitchPubSub(EVENT_MANAGER)),
 				WatchtimeMonitor(channelName, 3L, credential = APP_ACCESS_CREDENTIAL),
 				TtvChatGameClient(authHelper, channelName),
 				TtvEventConverter(playerStorage, ttvUserStorage),
-				Server(commandsScriptFilePath)
+				Server(commandsScriptFilePath, Game(gameWorld))
 		)
 	}
 }

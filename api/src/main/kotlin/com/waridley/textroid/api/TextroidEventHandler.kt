@@ -8,7 +8,8 @@ import com.github.philippheuer.events4j.reactor.ReactorEventHandler
 import com.github.philippheuer.events4j.simple.SimpleEventHandler
 import reactor.core.Disposable
 
-abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAGER, initializer: (TextroidEventHandler.() -> Unit)? = null): AutoCloseable {
+abstract class TextroidEventHandler(val eventManager: EventManager = EVENT_MANAGER,
+                                    initializer: (TextroidEventHandler.() -> Unit)? = null): AutoCloseable {
 	
 	open val log = logger<TextroidEventHandler>()
 	

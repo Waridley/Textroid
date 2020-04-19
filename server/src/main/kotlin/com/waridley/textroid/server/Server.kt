@@ -1,9 +1,8 @@
 package com.waridley.textroid.server
 
-import com.waridley.textroid.Game
+import com.waridley.textroid.engine.Game
 
-class Server(commandsScriptFilePath: String): AutoCloseable {
-//	val game: Game = Game()
+class Server(commandsScriptFilePath: String, val game: Game): AutoCloseable {
 	val actionValidator = ActionValidator()
 	val actionResponder = ActionResponder(commandsScriptFilePath)
 	

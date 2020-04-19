@@ -5,7 +5,10 @@ import com.fasterxml.jackson.annotation.JsonValue
 import org.litote.kmongo.Id
 
 @Suppress("UNUSED")
-class Player(@JsonValue override val id: PlayerId, override val storage: PlayerStorageInterface): Storable<Player, PlayerId, PlayerStorageInterface>(id, storage, Player::class.java) {
+class Player(
+		@JsonValue override val id: PlayerId,
+		override val storage: PlayerStorageInterface
+): Storable<Player, PlayerId, PlayerStorageInterface>(id, storage, Player::class.java) {
 	
 	var username: Name by uniqueStorage(::username)
 	
